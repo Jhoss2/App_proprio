@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Ninja's Corp",
-    "slug": "ninja-proprio",
+    "name": "Ninja's Fries",
+    "slug": "ninjas-fries",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,37 +15,38 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.ninjasfries.proprio",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Accès caméra requis pour la surveillance en temps réel.",
-        "NSMicrophoneUsageDescription": "Accès micro requis pour l'audio de surveillance.",
-        "NSLocalNetworkUsageDescription": "Accès réseau local requis pour les caméras WiFi."
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#09090b"
       },
-      "package": "com.ninjasfries.proprio",
+      "package": "com.ninjasfries.app",
       "softwareKeyboardLayoutMode": "pan",
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",
         "INTERNET",
         "ACCESS_NETWORK_STATE",
-        "ACCESS_WIFI_STATE",
-        "CHANGE_WIFI_MULTICAST_STATE",
-        "FOREGROUND_SERVICE",
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE"
+        "ACCESS_WIFI_STATE"
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "modes": [
+            "peripheral",
+            "central"
+          ],
+          "bluetoothAlwaysPermissionDescription": "L'application a besoin du Bluetooth pour imprimer les tickets."
+        }
+      ],
       "@config-plugins/react-native-webrtc"
     ]
   }
