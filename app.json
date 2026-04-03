@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "Ninja's Corp",
+    "slug": "ninja-proprio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#09090b"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ninjasfries.proprio",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Accès caméra requis pour la surveillance en temps réel.",
+        "NSMicrophoneUsageDescription": "Accès micro requis pour l'audio de surveillance.",
+        "NSLocalNetworkUsageDescription": "Accès réseau local requis pour les caméras WiFi."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#09090b"
+      },
+      "package": "com.ninjasfries.proprio",
+      "softwareKeyboardLayoutMode": "pan",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "ACCESS_WIFI_STATE",
+        "CHANGE_WIFI_MULTICAST_STATE",
+        "FOREGROUND_SERVICE",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#f97316",
+          "sounds": []
+        }
+      ],
+      "react-native-webrtc"
+    ]
+  }
+}
