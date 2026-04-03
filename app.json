@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#09090b"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ninjasfries.proprio",
@@ -44,15 +46,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/notification-icon.png",
-          "color": "#f97316",
-          "sounds": []
-        }
-      ],
-      "react-native-webrtc"
+      "@config-plugins/react-native-webrtc"
     ]
   }
 }
