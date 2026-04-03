@@ -8,7 +8,7 @@ const { SafeAreaProvider } = require('react-native-safe-area-context');
 const BottomTabNav = require('./navigation/BottomTabNav');
 const { COLORS } = require('./constants');
 
-export default function App() {
+function App() {
   useEffect(() => {
     StatusBar.setBarStyle('light-content');
     StatusBar.setBackgroundColor(COLORS.bg);
@@ -45,3 +45,6 @@ export default function App() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.bg },
 });
+
+module.exports = App;
+              
