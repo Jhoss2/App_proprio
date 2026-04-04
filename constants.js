@@ -1,60 +1,47 @@
 const { Dimensions } = require('react-native');
+const { width: W, height: H } = Dimensions.get('window');
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-// ── Charte graphique Ninja's Corp ──────────────────────
 const COLORS = {
-  // Fonds
-  bg:         '#09090b',   // noir profond principal
-  bgCard:     '#0d0d10',   // carte légèrement plus claire
-  bgInput:    '#111116',   // champs de saisie
+  bg:           '#000000',
+  bgDeep:       '#020205',
+  bgPanel:      '#05050a',
+  bgCard:       '#0a0a12',
 
-  // Orange (couleur primaire)
-  orange:     '#f97316',
-  orangeDim:  '#f9731640', // 25% opacité
-  orangeGlow: '#f9731620', // 12% opacité (halo)
-  orangeFade: '#f9731680', // 50% opacité
+  orange:       '#FF5722',
+  orangeGlow:   'rgba(255,87,34,0.15)',
+  orangeDim:    'rgba(255,87,34,0.4)',
+  orangeBright: '#FF7043',
 
-  // Textes
-  textPrimary:   '#ffffff',
-  textSecondary: '#ffffff80',
-  textMuted:     '#ffffff40',
+  cyan:         '#00E5FF',
+  cyanDim:      'rgba(0,229,255,0.3)',
+  cyanGlow:     'rgba(0,229,255,0.12)',
 
-  // États
-  online:  '#22c55e',
-  offline: '#ef4444',
-  warning: '#f59e0b',
+  amber:        '#FFB300',
+  amberDim:     'rgba(255,179,0,0.3)',
 
-  // Bords
-  border:      '#f9731630',
-  borderActive:'#f97316',
+  red:          '#D50000',
+  redGlow:      'rgba(213,0,0,0.3)',
+  redBright:    '#FF1744',
+
+  green:        '#00E676',
+  greenDim:     'rgba(0,230,118,0.3)',
+
+  textPrimary:   '#FFFFFF',
+  textSecondary: 'rgba(255,255,255,0.6)',
+  textMuted:     'rgba(255,255,255,0.25)',
+  textOrange:    '#FF5722',
+  textCyan:      '#00E5FF',
+  textAmber:     '#FFB300',
+
+  borderOrange:  'rgba(255,87,34,0.5)',
+  borderCyan:    'rgba(0,229,255,0.4)',
+  borderMuted:   'rgba(255,255,255,0.08)',
 };
 
-// ── Typographie monospace (style terminal/cyberpunk) ──
-const FONT = {
-  mono: 'monospace',
-};
+const FONT = { mono: 'monospace' };
 
-// ── Animations ─────────────────────────────────────────
-const GLOW_PULSE = {
-  duration: 2000,
-  easing: 'ease-in-out',
-};
-
-// ── Dimensions ─────────────────────────────────────────
-const BOTTOM_TAB_HEIGHT = 60;
-const STATUS_BAR_HEIGHT = 44;
-
-// ── Firebase Realtime DB — clé de signalisation WebRTC ─
+const SCREEN_WIDTH  = W;
+const SCREEN_HEIGHT = H;
 const WEBRTC_SIGNAL_PATH = 'webrtc-signals';
 
-module.exports = {
-  SCREEN_WIDTH,
-  SCREEN_HEIGHT,
-  COLORS,
-  FONT,
-  GLOW_PULSE,
-  BOTTOM_TAB_HEIGHT,
-  STATUS_BAR_HEIGHT,
-  WEBRTC_SIGNAL_PATH,
-};
+module.exports = { COLORS, FONT, SCREEN_WIDTH, SCREEN_HEIGHT, WEBRTC_SIGNAL_PATH };
