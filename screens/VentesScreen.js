@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   eqContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 100, gap: 3 },
   eqBarWrapper:{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', position: 'relative' },
   eqBar:       { width: '80%', borderRadius: 1, shadowOpacity: 0.8, shadowRadius: 4, shadowOffset: { width: 0, height: 0 }, elevation: 4 },
-  eqBarGlow:   { position: 'absolute', inset: 0, borderRadius: 2 },
+  eqBarGlow:   { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 2 },
   eqLabel:     { fontFamily: FONT.mono, fontSize: 6, marginTop: 3 },
   loadingText: { fontFamily: FONT.mono, fontSize: 9, color: COLORS.textMuted, textAlign: 'center', padding: 20 },
 
@@ -240,3 +240,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = VentesScreen;
+  
