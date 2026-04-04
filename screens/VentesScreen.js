@@ -104,7 +104,7 @@ const VentesScreen = () => {
 
   return (
     <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.cyan} height={600} />
+      <ScanLine color={COLORS.cyan} containerHeight={600} />
 
       {/* Header */}
       <View style={styles.header}>
