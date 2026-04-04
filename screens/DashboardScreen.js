@@ -236,7 +236,7 @@ const DashboardScreen = () => {
 
   return (
     <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.orange} height={SCREEN_HEIGHT} />
+      <ScanLine color={COLORS.orange} containerHeight={SCREEN_HEIGHT} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -333,3 +333,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = DashboardScreen;
+                           
