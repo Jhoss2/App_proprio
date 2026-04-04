@@ -146,13 +146,13 @@ const CamFeedCard = memo(({ cart, onExpand }) => {
         {/* Flux vidéo ou placeholder */}
         <View style={styles.feedArea}>
           {connected && remoteStream ? (
-            <>
-              {/* RTCView quand disponible */}
-              <View style={styles.streamPlaceholder}>
-                <BlinkLed color={COLORS.red} size={6} fast />
-                <Text style={[styles.liveText, { color: COLORS.red }]}>● LIVE</Text>
-              </View>
-            </>
+            <View style={styles.streamPlaceholder}>
+              <BlinkLed color={COLORS.red} size={6} fast />
+              <Text style={[styles.liveText, { color: COLORS.red }]}>● P2P LIVE</Text>
+              {RTCView ? (
+                <RTCView streamURL={remoteStream.toURL()} style={StyleSheet.absoluteFill} objectFit="cover" />
+              ) : null}
+            </View>
           ) : (
             <View style={styles.offlineFeed}>
               <Text style={styles.offlineIcon}>◉</Text>
@@ -177,7 +177,7 @@ const CamFeedCard = memo(({ cart, onExpand }) => {
           )}
 
           {/* Scan line animée */}
-          <ScanLine color={connected ? COLORS.cyan : COLORS.orange} height={120} />
+          <ScanLine color={connected ? COLORS.cyan : COLORS.orange} containerHeight={120} />
         </View>
 
         {/* Télémétrie */}
@@ -211,7 +211,7 @@ const FullscreenModal = memo(({ stream, cart, onClose }) => {
           <Text style={styles.fullPlaceholder}>FLUX VIDÉO{'\n'}{cart?.id}</Text>
           <Reticle color={COLORS.orange} />
           <CRTOverlay />
-          <ScanLine color={COLORS.orange} height={SCREEN_HEIGHT} />
+          <ScanLine color={COLORS.orange} containerHeight={SCREEN_HEIGHT} />
         </View>
 
         {/* HUD overlay */}
@@ -248,7 +248,7 @@ const LiveScreen = () => {
 
   return (
     <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.orange} height={SCREEN_HEIGHT} />
+      <ScanLine color={COLORS.orange} containerHeight={SCREEN_HEIGHT} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -345,4 +345,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = LiveScreen;
-    
+                     
