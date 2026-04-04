@@ -12,7 +12,7 @@ const { COLORS, FONT, SCREEN_WIDTH, SCREEN_HEIGHT } = require('../constants');
 
 /* ─── CRT Overlay ─── */
 const CRTOverlay = memo(() => (
-  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+  <View style={StyleSheet.absoluteFill}>
     {Array.from({ length: 40 }, (_, i) => (
       <View key={i} style={[styles.crtLine, { top: i * (SCREEN_HEIGHT / 40) }]} />
     ))}
@@ -345,3 +345,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = LiveScreen;
+    
