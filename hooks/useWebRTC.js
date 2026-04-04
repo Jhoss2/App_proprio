@@ -1,10 +1,16 @@
 const { useState, useRef, useEffect, useCallback } = require('react');
-const {
-  RTCPeerConnection,
-  RTCIceCandidate,
-  RTCSessionDescription,
-  mediaDevices,
-} = require('react-native-webrtc');
+// Import lazy de WebRTC — évite le crash au démarrage sur Android
+// Les classes sont chargées seulement quand on tente une connexion
+let RTCPeerConnection, RTCIceCandidate, RTCSessionDescription, mediaDevices;
+try {
+  const webrtc = require('react-native-webrtc');
+  RTCPeerConnection    = webrtc.RTCPeerConnection;
+  RTCIceCandidate      = webrtc.RTCIceCandidate;
+  RTCSessionDescription = webrtc.RTCSessionDescription;
+  mediaDevices         = webrtc.mediaDevices;
+} catch (e) {
+  console.warn('[WebRTC] Module non disponible:', e.message);
+}
 const { ref, set, onValue, remove, push, off } = require('firebase/database');
 const { rtdb } = require('../firebase/firebaseConfig');
 const { WEBRTC_SIGNAL_PATH } = require('../constants');
@@ -63,6 +69,7 @@ const useWebRTCViewer = (cartId) => {
   }, []);
 
   const connect = useCallback(async () => {
+    if (!RTCPeerConnection) { setError('WebRTC non disponible sur cet appareil'); return; }
     if (!cartId) { setError('Aucun cartId configuré'); return; }
     cleanup();
     setConnecting(true);
@@ -189,6 +196,7 @@ const useWebRTCBroadcaster = (cartId) => {
   }, [cartId]);
 
   const startBroadcast = useCallback(async () => {
+    if (!RTCPeerConnection) { console.warn('WebRTC non disponible'); return; }
     if (!cartId) return;
     stopBroadcast();
     setError(null);
@@ -283,4 +291,4 @@ const useWebRTCBroadcaster = (cartId) => {
 };
 
 module.exports = { useWebRTCViewer, useWebRTCBroadcaster };
-        
+                    
