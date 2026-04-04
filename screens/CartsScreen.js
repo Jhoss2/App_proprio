@@ -159,7 +159,7 @@ const CartsScreen = () => {
 
   return (
     <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.amber} height={600} />
+      <ScanLine color={COLORS.amber} containerHeight={600} />
 
       <View style={styles.header}>
         <BlinkLed color={COLORS.amber} size={6} />
@@ -241,3 +241,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = CartsScreen;
+                                                  
