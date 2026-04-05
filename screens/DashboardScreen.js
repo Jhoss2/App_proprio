@@ -269,10 +269,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: COLORS.borderOrange,
     backgroundColor: COLORS.bgPanel,
   },
-  headerLeft:  { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerLeft:  { flexDirection: 'row', alignItems: 'center', marginRight: 8},
   headerTitle: { fontFamily: FONT.mono, fontSize: 11, color: COLORS.orange, letterSpacing: 2 },
   headerSub:   { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted, marginLeft: 8 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', marginRight: 6},
   clockText:   { fontFamily: FONT.mono, fontSize: 11, color: COLORS.amber },
 
   body: { flex: 1, flexDirection: 'row' },
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   centerTitle: { fontFamily: FONT.mono, fontSize: 14, color: COLORS.orange, letterSpacing: 4, fontWeight: 'bold' },
   centerSub:   { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted, letterSpacing: 2, marginBottom: 16 },
 
-  gaugesRow:    { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  gaugesRow:    { flexDirection: 'row', alignItems: 'center', marginRight: 12},
   gaugeWrapper: { width: 110, height: 110, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   gaugeCenter:  { position: 'absolute', alignItems: 'center' },
   gaugeLabelTop:{ fontFamily: FONT.mono, fontSize: 7, color: COLORS.textMuted, letterSpacing: 1, textAlign: 'center' },
@@ -307,11 +307,11 @@ const styles = StyleSheet.create({
   ringDotCyan:  { position: 'absolute', width: 4, height: 4, borderRadius: 2, backgroundColor: COLORS.cyan },
   centerSep:    { width: 1, height: 80, backgroundColor: COLORS.borderOrange, opacity: 0.4 },
 
-  cartStatusRow: { flexDirection: 'row', gap: 6, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' },
-  cartPill:      { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: COLORS.borderOrange, borderRadius: 4 },
+  cartStatusRow: { flexDirection: 'row', marginRight: 6, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  cartPill:      { flexDirection: 'row', alignItems: 'center', marginRight: 4, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: COLORS.borderOrange, borderRadius: 4 },
   cartPillText:  { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textSecondary },
 
-  avgRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
+  avgRow:   { flexDirection: 'row', alignItems: 'center', marginRight: 6, marginTop: 10 },
   avgLabel: { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textMuted },
 
   // RIGHT
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
   circleItem: { alignItems: 'center' },
 
   syncBlock:  { marginBottom: 12 },
-  syncHeader: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
+  syncHeader: { flexDirection: 'row', alignItems: 'center', marginRight: 5, marginBottom: 6 },
   syncLabel:  { fontFamily: FONT.mono, fontSize: 8, color: COLORS.amber },
   syncBarBg:  { height: 3, backgroundColor: COLORS.borderMuted, borderRadius: 2, overflow: 'hidden' },
   syncBarFill:{ height: '100%', backgroundColor: COLORS.amber, borderRadius: 2 },
@@ -333,4 +333,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = DashboardScreen;
-                           
+        
