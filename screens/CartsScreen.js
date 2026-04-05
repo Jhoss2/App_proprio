@@ -104,7 +104,7 @@ const CartCard = memo(({ cart, onDelete }) => {
     <GlowBorder color={isOnline ? COLORS.orange : COLORS.red} style={styles.cartCard}>
       {/* En-tête */}
       <View style={styles.cartHeader}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8}}>
           <BlinkLed color={isOnline ? COLORS.cyan : COLORS.red} size={7} />
           <View>
             <Text style={styles.cartName}>{(cart.cartName || cart.id).toUpperCase()}</Text>
@@ -200,7 +200,7 @@ const CartsScreen = () => {
 const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: COLORS.bg },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
+    flexDirection: 'row', alignItems: 'center', marginRight: 8,
     paddingHorizontal: 12, paddingVertical: 8,
     borderBottomWidth: 1, borderBottomColor: COLORS.amberDim,
     backgroundColor: COLORS.bgPanel,
@@ -219,10 +219,10 @@ const styles = StyleSheet.create({
   cartHeader:{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
   cartName:  { fontFamily: FONT.mono, fontSize: 13, color: COLORS.textPrimary, letterSpacing: 1 },
   cartId:    { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted, marginTop: 2 },
-  cartHeaderRight: { alignItems: 'flex-end', gap: 4 },
-  cartBody:  { flexDirection: 'row', gap: 12 },
-  gaugesCol: { gap: 8, alignItems: 'center' },
-  stocksCol: { flex: 1, gap: 8 },
+  cartHeaderRight: { alignItems: 'flex-end', marginRight: 4},
+  cartBody:  { flexDirection: 'row', marginRight: 12},
+  gaugesCol: { marginRight: 8, alignItems: 'center' },
+  stocksCol: { flex: 1, marginRight: 8},
 
   gearWrapper: { alignItems: 'center', justifyContent: 'center', position: 'relative' },
   gearOuter:   { borderWidth: 2, position: 'absolute', alignItems: 'center', justifyContent: 'center', shadowOpacity: 0.6, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 4 },
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
   gearCenter:  { alignItems: 'center', justifyContent: 'center' },
   gearLabel:   { fontFamily: FONT.mono, fontWeight: 'bold', textAlign: 'center' },
 
-  stockRow:      { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  stockRow:      { flexDirection: 'row', alignItems: 'center', marginRight: 8},
   stockLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
   stockLabel:    { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textMuted },
   stockBarBg:    { height: 3, backgroundColor: COLORS.borderMuted, borderRadius: 2, overflow: 'hidden' },
@@ -241,4 +241,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = CartsScreen;
-                                                  
+  
