@@ -37,7 +37,7 @@ const ConfigScreen = () => {
 
   return (
     <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.amber} height={600} />
+      <ScanLine color={COLORS.amber} containerHeight={600} />
       <View style={styles.header}>
         <BlinkLed color={COLORS.amber} size={6} />
         <GlitchText text="SYSTEM_CONFIG" style={styles.headerTitle} />
@@ -86,7 +86,7 @@ const ConfigScreen = () => {
 
 const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: COLORS.bg },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.amberDim, backgroundColor: COLORS.bgPanel },
+  header: { flexDirection: 'row', alignItems: 'center', marginRight: 8, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.amberDim, backgroundColor: COLORS.bgPanel },
   headerTitle: { fontFamily: FONT.mono, fontSize: 11, color: COLORS.amber, letterSpacing: 2, flex: 1 },
   headerSub:   { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted },
   scroll:      { padding: 12, paddingBottom: 40 },
@@ -104,3 +104,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = ConfigScreen;
+              
