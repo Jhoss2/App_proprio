@@ -218,7 +218,7 @@ const FullscreenModal = memo(({ stream, cart, onClose }) => {
         <View style={styles.fullHud}>
           <View style={styles.fullHudLeft}>
             <GlitchText text="NINJA CORP · SURVEILLANCE" style={styles.fullHudTitle} />
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 6}}>
               <BlinkLed color={COLORS.red} size={6} fast />
               <Text style={styles.fullHudSub}>REC · WebRTC P2P · ZERO CLOUD</Text>
             </View>
@@ -283,7 +283,7 @@ const LiveScreen = () => {
 const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: COLORS.bg },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
+    flexDirection: 'row', alignItems: 'center', marginRight: 8,
     paddingHorizontal: 12, paddingVertical: 8,
     borderBottomWidth: 1, borderBottomColor: COLORS.borderOrange,
     backgroundColor: COLORS.bgPanel,
@@ -291,12 +291,12 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: FONT.mono, fontSize: 11, color: COLORS.orange, letterSpacing: 2, flex: 1 },
   headerSub:   { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textMuted },
 
-  grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', padding: 8, gap: 8 },
+  grid: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', padding: 8, marginRight: 8},
 
   camCard:   { width: (SCREEN_WIDTH - 32) / 2, height: 200 },
   feedArea:  { flex: 1, backgroundColor: '#050508', overflow: 'hidden', position: 'relative', minHeight: 120 },
 
-  streamPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  streamPlaceholder: { flex: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', marginRight: 6},
   liveText:  { fontFamily: FONT.mono, fontSize: 10, letterSpacing: 1 },
 
   offlineFeed:  { flex: 1, alignItems: 'center', justifyContent: 'center' },
@@ -345,4 +345,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = LiveScreen;
-                     
+    
