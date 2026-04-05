@@ -193,7 +193,7 @@ const VentesScreen = () => {
 const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: COLORS.bg },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
+    flexDirection: 'row', alignItems: 'center', marginRight: 8,
     paddingHorizontal: 12, paddingVertical: 8,
     borderBottomWidth: 1, borderBottomColor: COLORS.borderCyan,
     backgroundColor: COLORS.bgPanel,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   cartChipActive:{ borderColor: COLORS.orange },
   cartChipText: { fontFamily: FONT.mono, fontSize: 9, color: COLORS.textSecondary },
 
-  statsRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  statsRow: { flexDirection: 'row', marginRight: 8, marginBottom: 12 },
   statCard: { flex: 1, padding: 10, alignItems: 'center' },
   statLabel:{ fontFamily: FONT.mono, fontSize: 7, color: COLORS.textMuted, letterSpacing: 1, marginBottom: 4 },
 
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
 
   eqCard:      { padding: 10, marginBottom: 12 },
   eqTitle:     { fontFamily: FONT.mono, fontSize: 8, color: COLORS.orange, letterSpacing: 1, marginBottom: 10 },
-  eqContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 100, gap: 3 },
+  eqContainer: { flexDirection: 'row', alignItems: 'flex-end', height: 100, marginRight: 3},
   eqBarWrapper:{ flex: 1, alignItems: 'center', justifyContent: 'flex-end', position: 'relative' },
   eqBar:       { width: '80%', borderRadius: 1, shadowOpacity: 0.8, shadowRadius: 4, shadowOffset: { width: 0, height: 0 }, elevation: 4 },
   eqBarGlow:   { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 2 },
@@ -240,4 +240,3 @@ const styles = StyleSheet.create({
 });
 
 module.exports = VentesScreen;
-  
