@@ -14,19 +14,18 @@ const GlowBorder = memo(({ children, color = COLORS.orange, style }) => {
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(anim, { toValue: 1, duration: 2000, useNativeDriver: false }),
-        Animated.timing(anim, { toValue: 0, duration: 2000, useNativeDriver: false }),
+        Animated.timing(anim, { toValue: 1, duration: 2000, useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0, duration: 2000, useNativeDriver: true }),
       ])
     ).start();
   }, []);
-  const borderColor = anim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [`${color}50`, color],
-  });
   return (
-    <Animated.View style={[styles.glowBorder, { borderColor }, style]}>
+    <View style={[styles.glowBorder, { borderColor: color }, style]}>
+      <Animated.View style={[StyleSheet.absoluteFill, {
+        borderWidth: 1, borderRadius: 8, borderColor: color, opacity: anim,
+      }]} />
       {children}
-    </Animated.View>
+    </View>
   );
 });
 
@@ -203,7 +202,7 @@ const WaveGraph = memo(({ data = [], width = 300, height = 80, color = COLORS.cy
   const barW   = Math.floor(width / data.length) - 2;
 
   return (
-    <View style={{ width, height, flexDirection: 'row', alignItems: 'flex-end', gap: 2 }}>
+    <View style={{ width, height, flexDirection: 'row', alignItems: 'flex-end', marginRight: 2}}>
       {data.map((v, i) => {
         const barH = Math.max(4, Math.round((v / maxVal) * (height - 8)));
         const pct  = v / maxVal;
@@ -261,4 +260,4 @@ module.exports = {
   GlitchText,
   WaveGraph,
 };
-      
+  
