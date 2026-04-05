@@ -345,4 +345,3 @@ const styles = StyleSheet.create({
 });
 
 module.exports = LiveScreen;
-    
