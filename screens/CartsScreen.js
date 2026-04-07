@@ -33,7 +33,7 @@ const CartCard = memo(({ cart, onDelete }) => {
           </View>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Num val={todayTotal.toLocaleString('fr-FR')} size={14} color={C.orange} suf=" F" />
+          <Num val={(todayTotal || 0).toLocaleString('fr-FR')} size={14} color={C.orange} suf=" F" />
           <Pressable onPress={() => Alert.alert('Supprimer', `Supprimer "${cart.cartName || cart.id}" ?`, [
             { text: 'Annuler', style: 'cancel' },
             { text: 'Supprimer', style: 'destructive', onPress: () => onDelete(cart.id) },
