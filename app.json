@@ -3,7 +3,7 @@
     "name": "Ninja's Corp",
     "slug": "ninja-proprio",
     "version": "2.0.0",
-    "orientation": "paysage",
+    "orientation": "landscape",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
