@@ -1,8 +1,8 @@
 const React = require('react');
 const { useRef, useEffect, memo } = React;
-const { View, Text, Pressable, StyleSheet, Animated, Easing } = require('react-native');
+const { View, Text, Pressable, StyleSheet, Animated } = require('react-native');
 const { createBottomTabNavigator } = require('@react-navigation/bottom-tabs');
-const { COLORS, FONT } = require('../constants');
+const { C, F } = require('../constants');
 
 const DashboardScreen = require('../screens/DashboardScreen');
 const LiveScreen      = require('../screens/LiveScreen');
@@ -13,64 +13,45 @@ const ConfigScreen    = require('../screens/ConfigScreen');
 const Tab = createBottomTabNavigator();
 
 const TABS = [
-  { name: 'Dashboard', label: 'HQ',      icon: '⊞', color: COLORS.orange },
-  { name: 'Live',      label: 'LIVE',    icon: '◉', color: COLORS.red    },
-  { name: 'Ventes',    label: 'SIGNAL',  icon: '≋', color: COLORS.cyan   },
-  { name: 'Carts',     label: 'MECH',    icon: '⚙', color: COLORS.amber  },
-  { name: 'Config',    label: 'SYS',     icon: '≡', color: COLORS.textSecondary },
+  { name: 'Dashboard', label: 'HQ',     icon: '⊞', color: C.orange },
+  { name: 'Live',      label: 'LIVE',   icon: '◉', color: C.red    },
+  { name: 'Ventes',    label: 'SIGNAL', icon: '≋', color: C.cyan   },
+  { name: 'Carts',     label: 'MECH',   icon: '⚙', color: C.amber  },
+  { name: 'Config',    label: 'SYS',    icon: '≡', color: C.w60    },
 ];
 
-const TabButton = memo(({ tab, isFocused, onPress }) => {
-  const glowAnim  = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
+const TabBtn = memo(({ tab, focused, onPress }) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  const bg    = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (isFocused) {
-      Animated.parallel([
-        Animated.timing(glowAnim,  { toValue: 1, duration: 200, useNativeDriver: false }),
-        Animated.spring(scaleAnim, { toValue: 1.1, useNativeDriver: true, tension: 200 }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(glowAnim,  { toValue: 0, duration: 200, useNativeDriver: false }),
-        Animated.spring(scaleAnim, { toValue: 1,   useNativeDriver: true }),
-      ]).start();
-    }
-  }, [isFocused]);
-
-  const bgColor = glowAnim.interpolate({ inputRange: [0, 1], outputRange: ['rgba(0,0,0,0)', `${tab.color}18`] });
-  const textColor = isFocused ? tab.color : COLORS.textMuted;
-
+    Animated.parallel([
+      Animated.spring(scale, { toValue: focused ? 1.08 : 1, useNativeDriver: true, tension: 200 }),
+      Animated.timing(bg,    { toValue: focused ? 1 : 0, duration: 180, useNativeDriver: false }),
+    ]).start();
+  }, [focused]);
+  const bgColor = bg.interpolate({ inputRange: [0,1], outputRange: ['rgba(0,0,0,0)', `${tab.color}15`] });
   return (
-    <Pressable onPress={onPress} style={styles.tabBtn}>
-      <Animated.View style={[styles.tabInner, { backgroundColor: bgColor, transform: [{ scale: scaleAnim }] }]}>
-        {/* Ligne lumineuse en haut quand actif */}
-        {isFocused && (
-          <Animated.View style={[styles.activeBar, { backgroundColor: tab.color, shadowColor: tab.color }]} />
-        )}
-        <Text style={[styles.tabIcon, { color: textColor }]}>{tab.icon}</Text>
-        <Text style={[styles.tabLabel, { color: textColor }]}>{tab.label}</Text>
+    <Pressable onPress={onPress} style={{ flex: 1 }}>
+      <Animated.View style={[st.tabInner, { backgroundColor: bgColor, transform: [{ scale }] }]}>
+        {focused && <View style={[st.activeBar, { backgroundColor: tab.color }]} />}
+        <Text style={[st.tabIcon, { color: focused ? tab.color : C.w25 }]}>{tab.icon}</Text>
+        <Text style={[st.tabLabel, { color: focused ? tab.color : C.w25 }]}>{tab.label}</Text>
       </Animated.View>
     </Pressable>
   );
 });
 
 const CustomTabBar = ({ state, navigation }) => (
-  <View style={styles.tabBar}>
-    <View style={styles.tabBarGlow} />
+  <View style={st.bar}>
+    <View style={st.topLine} />
     {TABS.map((tab, i) => (
-      <TabButton
-        key={tab.name}
-        tab={tab}
-        isFocused={state.index === i}
-        onPress={() => navigation.navigate(tab.name)}
-      />
+      <TabBtn key={tab.name} tab={tab} focused={state.index === i} onPress={() => navigation.navigate(tab.name)} />
     ))}
   </View>
 );
 
 const BottomTabNav = () => (
-  <Tab.Navigator tabBar={props => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
+  <Tab.Navigator tabBar={p => <CustomTabBar {...p} />} screenOptions={{ headerShown: false }}>
     <Tab.Screen name="Dashboard" component={DashboardScreen} />
     <Tab.Screen name="Live"      component={LiveScreen} />
     <Tab.Screen name="Ventes"    component={VentesScreen} />
@@ -79,27 +60,14 @@ const BottomTabNav = () => (
   </Tab.Navigator>
 );
 
-const styles = StyleSheet.create({
-  tabBar: {
-    flexDirection: 'row', height: 56,
-    backgroundColor: '#020205',
-    borderTopWidth: 0, position: 'relative',
-  },
-  tabBarGlow: {
-    position: 'absolute', top: 0, left: 0, right: 0, height: 1,
-    backgroundColor: COLORS.borderOrange,
-    shadowColor: COLORS.orange, shadowRadius: 8, shadowOpacity: 0.6,
-    shadowOffset: { width: 0, height: 0 }, elevation: 4,
-  },
-  tabBtn:   { flex: 1 },
-  tabInner: { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 4, margin: 3, position: 'relative' },
-  activeBar: {
-    position: 'absolute', top: 0, left: '15%', right: '15%', height: 2,
-    borderRadius: 1, shadowOpacity: 1, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 4,
-  },
-  tabIcon:  { fontSize: 16, marginBottom: 2 },
-  tabLabel: { fontFamily: FONT.mono, fontSize: 7, letterSpacing: 1 },
+const st = StyleSheet.create({
+  bar:       { flexDirection: 'row', height: 54, backgroundColor: '#020205' },
+  topLine:   { position: 'absolute', top: 0, left: 0, right: 0, height: 1, backgroundColor: C.bOrange },
+  tabInner:  { flex: 1, alignItems: 'center', justifyContent: 'center', borderRadius: 4, margin: 3, position: 'relative' },
+  activeBar: { position: 'absolute', top: 0, left: '20%', right: '20%', height: 2, borderRadius: 1 },
+  tabIcon:   { fontSize: 15, marginBottom: 1 },
+  tabLabel:  { fontFamily: F, fontSize: 7, letterSpacing: 0.8 },
 });
 
 module.exports = BottomTabNav;
-                       
+                    
