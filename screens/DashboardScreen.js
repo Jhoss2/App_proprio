@@ -94,11 +94,13 @@ const RotDial = memo(({ children, color = C.orange, size = 110 }) => {
 
 /* ── Panel stats droite ── */
 const StatsPanel = memo(({ stats, carts }) => {
-  const syncA = useRef(new Animated.Value(0)).current;
+  const [syncPct, setSyncPct] = React.useState(70);
   useEffect(() => {
-    Animated.loop(Animated.timing(syncA, { toValue: 1, duration: 3200, useNativeDriver: false })).start();
+    const iv = setInterval(() => {
+      setSyncPct(p => p >= 100 ? 70 : p + 2);
+    }, 80);
+    return () => clearInterval(iv);
   }, []);
-  const syncW = syncA.interpolate({ inputRange: [0,1], outputRange: ['65%','100%'] });
   const online = carts.filter(c => c.updatedAt && (Date.now()/1000 - c.updatedAt.seconds) < 300).length;
 
   return (
@@ -115,8 +117,10 @@ const StatsPanel = memo(({ stats, carts }) => {
           <Led color={C.amber} size={5} />
           <Text style={[st.micro, { color: C.amber, marginLeft: 5 }]}>CLOUD_SYNC</Text>
         </View>
-        <View style={[st.barBg, { height: 3 }]}>
-          <Animated.View style={{ height: 3, width: syncW, backgroundColor: C.amber, borderRadius: 2 }} />
+        <View style={[st.barBg, { height: 3, flexDirection: 'row', overflow: 'hidden' }]}>
+          {Array.from({ length: 20 }, (_, i) => (
+            <View key={i} style={{ flex: 1, height: 3, backgroundColor: i < Math.round(syncPct / 5) ? C.amber : 'transparent' }} />
+          ))}
         </View>
         <Text style={[st.micro, { color: C.amberD, marginTop: 2 }]}>FIRESTORE ● LIVE</Text>
       </View>
@@ -221,4 +225,4 @@ const st = StyleSheet.create({
 });
 
 module.exports = DashboardScreen;
-                    
+                     
