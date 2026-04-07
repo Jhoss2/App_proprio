@@ -7,7 +7,7 @@ const { C, F, W, H } = require('../constants');
 
 /* ── CRT overlay (lignes horizontales fixes) ── */
 const CRT = memo(() => (
-  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+  <View style={StyleSheet.absoluteFill}>
     {Array.from({ length: 30 }, (_, i) => (
       <View key={i} style={{ position: 'absolute', left: 0, right: 0, top: i * (H / 30), height: 1, backgroundColor: '#000', opacity: 0.07 }} />
     ))}
@@ -33,7 +33,7 @@ const Reticle = memo(({ color = C.orange, alert = false }) => {
   const alOp = ab.interpolate({ inputRange: [0,1], outputRange: [0, 0.18] });
   const c14  = 14;
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={StyleSheet.absoluteFill}>
       {/* Coins */}
       {[
         { top: 8,    left: 8,    borderTopWidth: 2,    borderLeftWidth: 2    },
@@ -161,4 +161,4 @@ const st = StyleSheet.create({
 });
 
 module.exports = LiveScreen;
-                
+        
