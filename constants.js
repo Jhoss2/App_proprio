@@ -1,47 +1,31 @@
 const { Dimensions } = require('react-native');
 const { width: W, height: H } = Dimensions.get('window');
 
-const COLORS = {
-  bg:           '#000000',
-  bgDeep:       '#020205',
-  bgPanel:      '#05050a',
-  bgCard:       '#0a0a12',
-
-  orange:       '#FF5722',
-  orangeGlow:   'rgba(255,87,34,0.15)',
-  orangeDim:    'rgba(255,87,34,0.4)',
-  orangeBright: '#FF7043',
-
-  cyan:         '#00E5FF',
-  cyanDim:      'rgba(0,229,255,0.3)',
-  cyanGlow:     'rgba(0,229,255,0.12)',
-
-  amber:        '#FFB300',
-  amberDim:     'rgba(255,179,0,0.3)',
-
-  red:          '#D50000',
-  redGlow:      'rgba(213,0,0,0.3)',
-  redBright:    '#FF1744',
-
-  green:        '#00E676',
-  greenDim:     'rgba(0,230,118,0.3)',
-
-  textPrimary:   '#FFFFFF',
-  textSecondary: 'rgba(255,255,255,0.6)',
-  textMuted:     'rgba(255,255,255,0.25)',
-  textOrange:    '#FF5722',
-  textCyan:      '#00E5FF',
-  textAmber:     '#FFB300',
-
-  borderOrange:  'rgba(255,87,34,0.5)',
-  borderCyan:    'rgba(0,229,255,0.4)',
-  borderMuted:   'rgba(255,255,255,0.08)',
+const C = {
+  bg:        '#000000',
+  bgCard:    '#0a0a0f',
+  bgPanel:   '#05050a',
+  orange:    '#FF5722',
+  orangeD:   'rgba(255,87,34,0.18)',
+  orangeB:   '#FF7043',
+  cyan:      '#00E5FF',
+  cyanD:     'rgba(0,229,255,0.18)',
+  amber:     '#FFB300',
+  amberD:    'rgba(255,179,0,0.2)',
+  red:       '#FF1744',
+  redD:      'rgba(255,23,68,0.2)',
+  green:     '#00E676',
+  white:     '#FFFFFF',
+  w60:       'rgba(255,255,255,0.6)',
+  w25:       'rgba(255,255,255,0.25)',
+  w08:       'rgba(255,255,255,0.08)',
+  bOrange:   'rgba(255,87,34,0.5)',
+  bCyan:     'rgba(0,229,255,0.4)',
 };
 
-const FONT = { mono: 'monospace' };
+const F = 'monospace';
+const W2 = W;
+const H2 = H;
+const SIGNAL_PATH = 'webrtc-signals';
 
-const SCREEN_WIDTH  = W;
-const SCREEN_HEIGHT = H;
-const WEBRTC_SIGNAL_PATH = 'webrtc-signals';
-
-module.exports = { COLORS, FONT, SCREEN_WIDTH, SCREEN_HEIGHT, WEBRTC_SIGNAL_PATH };
+module.exports = { C, F, W: W2, H: H2, SIGNAL_PATH };
