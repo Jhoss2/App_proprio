@@ -106,7 +106,7 @@ const StatsPanel = memo(({ stats, carts }) => {
       <Text style={[st.panelTitle, { color: C.cyan }]}>// ANALYTICS</Text>
       <View style={[st.divider, { borderColor: C.bCyan }]} />
       <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 }}>
-        <Gauge val={stats.totalOrders} max={Math.max(stats.totalOrders, 50)} size={70} color={C.orange} label="VENTES" />
+        <Gauge val={(stats.totalOrders || 0)} max={Math.max((stats.totalOrders || 0), 50)} size={70} color={C.orange} label="VENTES" />
         <Gauge val={online} max={Math.max(carts.length, 1)} size={70} color={C.cyan} label="ONLINE" />
       </View>
       {/* Sync bar */}
@@ -123,8 +123,8 @@ const StatsPanel = memo(({ stats, carts }) => {
       {/* Métriques */}
       {[
         { label: 'CARTS_TOTAL', val: String(carts.length),                          color: C.white  },
-        { label: 'TOTAL_JOUR',  val: stats.totalToday.toLocaleString('fr-FR') + 'F', color: C.orange },
-        { label: 'MOY_CMD',     val: stats.avgBasket.toLocaleString('fr-FR') + 'F',  color: C.amber  },
+        { label: 'TOTAL_JOUR',  val: (stats.totalToday || 0).toLocaleString('fr-FR') + 'F', color: C.orange },
+        { label: 'MOY_CMD',     val: (stats.avgBasket  || 0).toLocaleString('fr-FR') + 'F',  color: C.amber  },
         { label: 'PEAK_HOUR',   val: '13:00',                                        color: C.cyan   },
       ].map(m => (
         <View key={m.label} style={st.metricRow}>
@@ -139,7 +139,8 @@ const StatsPanel = memo(({ stats, carts }) => {
 /* ── ÉCRAN PRINCIPAL ── */
 const DashboardScreen = () => {
   const { carts }  = useAllCarts();
-  const stats      = useDashboardStats(carts);
+  const rawStats   = useDashboardStats(carts);
+  const stats = { totalToday: rawStats?.totalToday || 0, totalOrders: rawStats?.totalOrders || 0, avgBasket: rawStats?.avgBasket || 0 };
   const today      = new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
 
   return (
@@ -167,12 +168,12 @@ const DashboardScreen = () => {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
             <RotDial color={C.orange} size={108}>
               <Text style={[st.micro, { color: C.w25, textAlign: 'center' }]}>C.A. JOUR</Text>
-              <Num val={stats.totalToday.toLocaleString('fr-FR')} size={17} color={C.orange} suf=" F" />
+              <Num val={(stats.totalToday || 0).toLocaleString('fr-FR')} size={17} color={C.orange} suf=" F" />
             </RotDial>
             <View style={{ width: 1, height: 70, backgroundColor: C.bOrange, marginHorizontal: 12 }} />
             <RotDial color={C.cyan} size={108}>
               <Text style={[st.micro, { color: C.w25, textAlign: 'center' }]}>COMMANDES</Text>
-              <Num val={String(stats.totalOrders)} size={22} color={C.cyan} />
+              <Num val={String((stats.totalOrders || 0))} size={22} color={C.cyan} />
             </RotDial>
           </View>
           {/* Carts status */}
@@ -189,7 +190,7 @@ const DashboardScreen = () => {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
             <Text style={[st.micro, { color: C.w25 }]}>MOY/CMD</Text>
-            <Num val={stats.avgBasket.toLocaleString('fr-FR')} size={13} color={C.amber} suf=" F" />
+            <Num val={(stats.avgBasket  || 0).toLocaleString('fr-FR')} size={13} color={C.amber} suf=" F" />
           </View>
         </View>
         <StatsPanel stats={stats} carts={carts} />
@@ -220,4 +221,4 @@ const st = StyleSheet.create({
 });
 
 module.exports = DashboardScreen;
-        
+                    
