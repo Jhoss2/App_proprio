@@ -1,230 +1,137 @@
 const React = require('react');
 const { useState, useEffect, useRef, memo } = React;
-const {
-  View, Text, ScrollView, StyleSheet, Animated,
-  SafeAreaView, Pressable, Easing, Vibration,
-} = require('react-native');
+const { View, Text, ScrollView, StyleSheet, Animated, SafeAreaView, Easing } = require('react-native');
+const { Led, Scan, Glitch, Num, Gauge, Rain, Card } = require('../components/Atoms');
+const { useAllCarts, useDashboardStats } = require('../hooks/useFirestore');
+const { C, F, W } = require('../constants');
 
-const {
-  GlowBorder, BlinkLed, AnimatedNumber,
-  BinaryRain, CircularGauge, GlitchText, ScanLine,
-} = require('../components/Animations');
-const { useAllCarts, useCartOrders, useDashboardStats } = require('../hooks/useFirestore');
-const { COLORS, FONT, SCREEN_WIDTH } = require('../constants');
-
-/* ── Colonne log système ── */
-const SystemLog = memo(({ carts }) => {
+/* ── Log système ── */
+const SysLog = memo(() => {
   const [logs, setLogs] = useState([
-    { t: '22:47:01', msg: 'SYSTEM_BOOT_OK',         type: 'ok'  },
-    { t: '22:47:02', msg: 'FIRESTORE_CONNECTED',     type: 'ok'  },
-    { t: '22:47:03', msg: 'CARTS_SYNC_INIT',         type: 'sys' },
+    { t: '00:00:00', msg: 'SYSTEM_BOOT_OK',     type: 'ok'  },
+    { t: '00:00:01', msg: 'FIREBASE_CONNECTED', type: 'ok'  },
+    { t: '00:00:02', msg: 'CARTS_SYNC_INIT',    type: 'sys' },
   ]);
-
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date().toLocaleTimeString('fr-FR');
-      const msgs = [
-        { msg: 'HEARTBEAT_OK',       type: 'ok'  },
-        { msg: 'DATA_STREAM_ACTIVE', type: 'sys' },
-        { msg: 'SYNC_PULSE',         type: 'sys' },
-        { msg: 'CARTS_STATUS_CHECK', type: 'ok'  },
-      ];
+    const msgs = [
+      { msg: 'HEARTBEAT_OK',       type: 'ok'  },
+      { msg: 'DATA_STREAM_ACTIVE', type: 'sys' },
+      { msg: 'SYNC_PULSE',         type: 'sys' },
+      { msg: 'ORDER_RECEIVED',     type: 'ok'  },
+      { msg: 'CART_STATUS_CHECK',  type: 'sys' },
+    ];
+    const iv = setInterval(() => {
+      const now  = new Date().toLocaleTimeString('fr-FR');
       const pick = msgs[Math.floor(Math.random() * msgs.length)];
-      setLogs(prev => [{ t: now, ...pick }, ...prev].slice(0, 12));
+      setLogs(p => [{ t: now, ...pick }, ...p].slice(0, 14));
     }, 2800);
-    return () => clearInterval(interval);
+    return () => clearInterval(iv);
   }, []);
-
+  const col = { ok: C.cyan, sys: C.w60, warn: C.amber, err: C.red };
   return (
-    <View style={styles.logPanel}>
-      <Text style={styles.panelTitle}>// SYS_LOG</Text>
-      <View style={styles.logDivider} />
+    <View style={st.logPanel}>
+      <Text style={[st.panelTitle, { color: C.amber }]}>// SYS_LOG</Text>
+      <View style={st.divider} />
       {logs.map((l, i) => (
-        <View key={i} style={styles.logRow}>
-          <Text style={styles.logTime}>{l.t}</Text>
-          <Text style={[
-            styles.logMsg,
-            l.type === 'ok'   && { color: COLORS.cyan },
-            l.type === 'warn' && { color: COLORS.amber },
-            l.type === 'err'  && { color: COLORS.red },
-          ]}>{l.msg}</Text>
+        <View key={i} style={{ marginBottom: 5 }}>
+          <Text style={[st.logTime]}>{l.t}</Text>
+          <Text style={[st.logMsg, { color: col[l.type] || C.w60 }]}>{l.msg}</Text>
         </View>
       ))}
     </View>
   );
 });
 
-/* ── Cadran central avec binary rain ── */
-const CommandCenter = memo(({ stats, carts }) => {
-  const rotAnim = useRef(new Animated.Value(0)).current;
-
+/* ── Cadran rotatif ── */
+const RotDial = memo(({ children, color = C.orange, size = 110 }) => {
+  const a1 = useRef(new Animated.Value(0)).current;
+  const a2 = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.loop(
-      Animated.timing(rotAnim, { toValue: 1, duration: 20000, useNativeDriver: true, easing: Easing.linear })
-    ).start();
+    Animated.loop(Animated.timing(a1, { toValue: 1, duration: 18000, useNativeDriver: true, easing: Easing.linear })).start();
+    Animated.loop(Animated.timing(a2, { toValue: 1, duration: 10000, useNativeDriver: true, easing: Easing.linear })).start();
   }, []);
-
-  const rotate = rotAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const rotateRev = rotAnim.interpolate({ inputRange: [0, 1], outputRange: ['360deg', '0deg'] });
-
+  const r1 = a1.interpolate({ inputRange: [0,1], outputRange: ['0deg','360deg'] });
+  const r2 = a2.interpolate({ inputRange: [0,1], outputRange: ['360deg','0deg'] });
+  const r  = size / 2;
   return (
-    <View style={styles.centerPanel}>
-      <BinaryRain width={SCREEN_WIDTH * 0.38} count={10} />
-
-      {/* Titre */}
-      <GlitchText
-        text="NINJA'S CORP"
-        style={styles.centerTitle}
-      />
-      <Text style={styles.centerSub}>COMMAND_CENTER_v2.0</Text>
-
-      {/* Cadrans rotatifs */}
-      <View style={styles.gaugesRow}>
-        {/* Cadran CA */}
-        <View style={styles.gaugeWrapper}>
-          <Animated.View style={[styles.ringOuter, { transform: [{ rotate }] }]}>
-            {[0,1,2,3,4,5,6,7].map(i => (
-              <View key={i} style={[styles.ringDot, {
-                transform: [
-                  { rotate: `${i * 45}deg` },
-                  { translateY: -44 },
-                ],
-              }]} />
-            ))}
-          </Animated.View>
-          <Animated.View style={[styles.ringInner, { transform: [{ rotate: rotateRev }] }]}>
-            {[0,1,2,3,4,5].map(i => (
-              <View key={i} style={[styles.ringDotSmall, {
-                transform: [
-                  { rotate: `${i * 60}deg` },
-                  { translateY: -30 },
-                ],
-              }]} />
-            ))}
-          </Animated.View>
-          <View style={styles.gaugeCenter}>
-            <Text style={styles.gaugeLabelTop}>CHIFFRE D'AFFAIRES</Text>
-            <AnimatedNumber
-              value={stats.totalToday.toLocaleString('fr-FR')}
-              fontSize={20}
-              color={COLORS.orange}
-              suffix=" F"
-            />
-            <Text style={styles.gaugeLabelBot}>AUJOURD'HUI</Text>
-          </View>
-        </View>
-
-        {/* Séparateur */}
-        <View style={styles.centerSep} />
-
-        {/* Cadran commandes */}
-        <View style={styles.gaugeWrapper}>
-          <Animated.View style={[styles.ringOuter, styles.ringOuterCyan, { transform: [{ rotate: rotateRev }] }]}>
-            {[0,1,2,3,4,5,6,7].map(i => (
-              <View key={i} style={[styles.ringDotCyan, {
-                transform: [{ rotate: `${i * 45}deg` }, { translateY: -44 }],
-              }]} />
-            ))}
-          </Animated.View>
-          <View style={styles.gaugeCenter}>
-            <Text style={styles.gaugeLabelTop}>COMMANDES</Text>
-            <AnimatedNumber value={stats.totalOrders} fontSize={24} color={COLORS.cyan} />
-            <Text style={[styles.gaugeLabelBot, { color: COLORS.cyanDim }]}>TOTAL JOUR</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Statuts carts en bas */}
-      <View style={styles.cartStatusRow}>
-        {carts.map(cart => {
-          const isOnline = cart.updatedAt
-            ? (Date.now() / 1000 - cart.updatedAt.seconds) < 300
-            : false;
+    <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+      {/* Anneau extérieur */}
+      <Animated.View style={{ position: 'absolute', width: size, height: size, transform: [{ rotate: r1 }] }}>
+        {Array.from({ length: 8 }, (_, i) => {
+          const ang = (i / 8) * 2 * Math.PI;
           return (
-            <View key={cart.id} style={styles.cartPill}>
-              <BlinkLed color={isOnline ? COLORS.cyan : COLORS.red} size={5} />
-              <Text style={styles.cartPillText}>{cart.cartName || cart.id}</Text>
-            </View>
+            <View key={i} style={{
+              position: 'absolute',
+              left: r + (r - 4) * Math.cos(ang) - 3,
+              top:  r + (r - 4) * Math.sin(ang) - 3,
+              width: 6, height: 6, borderRadius: 3,
+              backgroundColor: color,
+            }} />
           );
         })}
-      </View>
-
-      {/* Panier moyen */}
-      <View style={styles.avgRow}>
-        <Text style={styles.avgLabel}>MOY/CMD</Text>
-        <AnimatedNumber value={stats.avgBasket.toLocaleString('fr-FR')} fontSize={14} color={COLORS.amber} suffix=" F" />
-      </View>
+      </Animated.View>
+      {/* Anneau intérieur */}
+      <Animated.View style={{ position: 'absolute', width: size * 0.72, height: size * 0.72, transform: [{ rotate: r2 }] }}>
+        {Array.from({ length: 6 }, (_, i) => {
+          const ang = (i / 6) * 2 * Math.PI;
+          const ri  = size * 0.36 - 4;
+          return (
+            <View key={i} style={{
+              position: 'absolute',
+              left: size * 0.36 + ri * Math.cos(ang) - 2,
+              top:  size * 0.36 + ri * Math.sin(ang) - 2,
+              width: 4, height: 4, borderRadius: 2,
+              backgroundColor: `${color}88`,
+            }} />
+          );
+        })}
+      </Animated.View>
+      {/* Contenu central */}
+      <View style={{ alignItems: 'center' }}>{children}</View>
     </View>
   );
 });
 
 /* ── Panel stats droite ── */
 const StatsPanel = memo(({ stats, carts }) => {
-  const syncAnim = useRef(new Animated.Value(0)).current;
-
+  const syncA = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.loop(
-      Animated.timing(syncAnim, { toValue: 1, duration: 3000, useNativeDriver: false })
-    ).start();
+    Animated.loop(Animated.timing(syncA, { toValue: 1, duration: 3200, useNativeDriver: false })).start();
   }, []);
-
-  const syncPct = syncAnim.interpolate({ inputRange: [0, 1], outputRange: [70, 100] });
+  const syncW = syncA.interpolate({ inputRange: [0,1], outputRange: ['65%','100%'] });
+  const online = carts.filter(c => c.updatedAt && (Date.now()/1000 - c.updatedAt.seconds) < 300).length;
 
   return (
-    <View style={styles.rightPanel}>
-      <Text style={styles.panelTitle}>// ANALYTICS</Text>
-      <View style={styles.logDivider} />
-
-      {/* Jauges circulaires */}
-      <View style={styles.circlesRow}>
-        <View style={styles.circleItem}>
-          <CircularGauge
-            value={stats.totalOrders}
-            max={Math.max(stats.totalOrders, 50)}
-            size={72}
-            color={COLORS.orange}
-            label="VENTES"
-          />
-        </View>
-        <View style={styles.circleItem}>
-          <CircularGauge
-            value={carts.filter(c => c.updatedAt && (Date.now()/1000 - c.updatedAt.seconds) < 300).length}
-            max={Math.max(carts.length, 1)}
-            size={72}
-            color={COLORS.cyan}
-            label="ONLINE"
-          />
-        </View>
+    <View style={st.rightPanel}>
+      <Text style={[st.panelTitle, { color: C.cyan }]}>// ANALYTICS</Text>
+      <View style={[st.divider, { borderColor: C.bCyan }]} />
+      <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 }}>
+        <Gauge val={stats.totalOrders} max={Math.max(stats.totalOrders, 50)} size={70} color={C.orange} label="VENTES" />
+        <Gauge val={online} max={Math.max(carts.length, 1)} size={70} color={C.cyan} label="ONLINE" />
       </View>
-
-      {/* Sync cloud */}
-      <View style={styles.syncBlock}>
-        <View style={styles.syncHeader}>
-          <BlinkLed color={COLORS.amber} size={5} />
-          <Text style={styles.syncLabel}>CLOUD_SYNC</Text>
+      {/* Sync bar */}
+      <View style={{ marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+          <Led color={C.amber} size={5} />
+          <Text style={[st.micro, { color: C.amber, marginLeft: 5 }]}>CLOUD_SYNC</Text>
         </View>
-        <View style={styles.syncBarBg}>
-          <Animated.View style={[styles.syncBarFill, {
-            width: syncAnim.interpolate({ inputRange: [0,1], outputRange: ['70%','100%'] }),
-          }]} />
+        <View style={[st.barBg, { height: 3 }]}>
+          <Animated.View style={{ height: 3, width: syncW, backgroundColor: C.amber, borderRadius: 2 }} />
         </View>
-        <Text style={styles.syncPct}>FIRESTORE ● LIVE</Text>
+        <Text style={[st.micro, { color: C.amberD, marginTop: 2 }]}>FIRESTORE ● LIVE</Text>
       </View>
-
-      {/* Métriques texte */}
-      <View style={styles.metricsBlock}>
-        {[
-          { label: 'CARTS_TOTAL',  val: carts.length,                    color: COLORS.textPrimary },
-          { label: 'BEST_SELLER',  val: 'FRITES XL',                     color: COLORS.orange      },
-          { label: 'PEAK_HOUR',    val: '13:00',                          color: COLORS.cyan        },
-          { label: 'AVG_BASKET',   val: `${stats.avgBasket.toLocaleString('fr-FR')}F`, color: COLORS.amber },
-        ].map(m => (
-          <View key={m.label} style={styles.metricRow}>
-            <Text style={styles.metricLabel}>{m.label}</Text>
-            <Text style={[styles.metricVal, { color: m.color }]}>{m.val}</Text>
-          </View>
-        ))}
-      </View>
+      {/* Métriques */}
+      {[
+        { label: 'CARTS_TOTAL', val: String(carts.length),                          color: C.white  },
+        { label: 'TOTAL_JOUR',  val: stats.totalToday.toLocaleString('fr-FR') + 'F', color: C.orange },
+        { label: 'MOY_CMD',     val: stats.avgBasket.toLocaleString('fr-FR') + 'F',  color: C.amber  },
+        { label: 'PEAK_HOUR',   val: '13:00',                                        color: C.cyan   },
+      ].map(m => (
+        <View key={m.label} style={st.metricRow}>
+          <Text style={st.metricLabel}>{m.label}</Text>
+          <Text style={[st.metricVal, { color: m.color }]}>{m.val}</Text>
+        </View>
+      ))}
     </View>
   );
 });
@@ -233,103 +140,83 @@ const StatsPanel = memo(({ stats, carts }) => {
 const DashboardScreen = () => {
   const { carts }  = useAllCarts();
   const stats      = useDashboardStats(carts);
+  const today      = new Date().toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
 
   return (
-    <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.orange} containerHeight={SCREEN_HEIGHT} />
-
+    <SafeAreaView style={st.root}>
+      <Scan color={C.orange} h={800} />
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <BlinkLed color={COLORS.orange} size={6} />
-          <Text style={styles.headerTitle}>DEEP_SPACE_ORANGE</Text>
-          <Text style={styles.headerSub}>NINJA'S CORP · COMMAND INTERFACE</Text>
+      <View style={st.header}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Led color={C.orange} size={7} />
+          <Glitch text="NINJA'S CORP" style={[st.headerTitle, { marginLeft: 8 }]} />
+          <Text style={[st.micro, { marginLeft: 10, color: C.w25 }]}>COMMAND_CENTER</Text>
         </View>
-        <View style={styles.headerRight}>
-          <Text style={styles.clockText}>{new Date().toLocaleTimeString('fr-FR')}</Text>
-          <BlinkLed color={COLORS.cyan} size={5} fast />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={[st.micro, { color: C.amber, marginRight: 8 }]}>{today}</Text>
+          <Led color={C.cyan} size={5} fast />
         </View>
       </View>
-
-      {/* Corps en 3 colonnes */}
-      <View style={styles.body}>
-        <SystemLog carts={carts} />
-        <CommandCenter stats={stats} carts={carts} />
+      {/* Corps 3 colonnes */}
+      <View style={st.body}>
+        <SysLog />
+        {/* Centre */}
+        <View style={st.center}>
+          <Rain width={W * 0.38} n={10} />
+          <Text style={st.centerSub}>DEEP_SPACE_ORANGE · v2.0</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+            <RotDial color={C.orange} size={108}>
+              <Text style={[st.micro, { color: C.w25, textAlign: 'center' }]}>C.A. JOUR</Text>
+              <Num val={stats.totalToday.toLocaleString('fr-FR')} size={17} color={C.orange} suf=" F" />
+            </RotDial>
+            <View style={{ width: 1, height: 70, backgroundColor: C.bOrange, marginHorizontal: 12 }} />
+            <RotDial color={C.cyan} size={108}>
+              <Text style={[st.micro, { color: C.w25, textAlign: 'center' }]}>COMMANDES</Text>
+              <Num val={String(stats.totalOrders)} size={22} color={C.cyan} />
+            </RotDial>
+          </View>
+          {/* Carts status */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {carts.map(cart => {
+              const on = cart.updatedAt && (Date.now()/1000 - cart.updatedAt.seconds) < 300;
+              return (
+                <View key={cart.id} style={[st.cartPill, { borderColor: on ? C.cyan : C.red, marginRight: 6, marginBottom: 6 }]}>
+                  <Led color={on ? C.cyan : C.red} size={5} />
+                  <Text style={[st.micro, { color: C.w60, marginLeft: 4 }]}>{cart.cartName || cart.id}</Text>
+                </View>
+              );
+            })}
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
+            <Text style={[st.micro, { color: C.w25 }]}>MOY/CMD</Text>
+            <Num val={stats.avgBasket.toLocaleString('fr-FR')} size={13} color={C.amber} suf=" F" />
+          </View>
+        </View>
         <StatsPanel stats={stats} carts={carts} />
       </View>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: COLORS.bg },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: COLORS.borderOrange,
-    backgroundColor: COLORS.bgPanel,
-  },
-  headerLeft:  { flexDirection: 'row', alignItems: 'center', marginRight: 8},
-  headerTitle: { fontFamily: FONT.mono, fontSize: 11, color: COLORS.orange, letterSpacing: 2 },
-  headerSub:   { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted, marginLeft: 8 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', marginRight: 6},
-  clockText:   { fontFamily: FONT.mono, fontSize: 11, color: COLORS.amber },
-
-  body: { flex: 1, flexDirection: 'row' },
-
-  // LOG
-  logPanel:   { width: SCREEN_WIDTH * 0.22, backgroundColor: COLORS.bgPanel, borderRightWidth: 1, borderRightColor: COLORS.borderOrange, padding: 8 },
-  panelTitle: { fontFamily: FONT.mono, fontSize: 9, color: COLORS.amber, letterSpacing: 1.5, marginBottom: 6 },
-  logDivider: { height: 1, backgroundColor: COLORS.borderOrange, marginBottom: 8, opacity: 0.5 },
-  logRow:     { marginBottom: 5 },
-  logTime:    { fontFamily: FONT.mono, fontSize: 7, color: COLORS.textMuted },
-  logMsg:     { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textSecondary, letterSpacing: 0.5 },
-
-  // CENTER
-  centerPanel: {
-    flex: 1, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: COLORS.bg, overflow: 'hidden', position: 'relative',
-  },
-  centerTitle: { fontFamily: FONT.mono, fontSize: 14, color: COLORS.orange, letterSpacing: 4, fontWeight: 'bold' },
-  centerSub:   { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted, letterSpacing: 2, marginBottom: 16 },
-
-  gaugesRow:    { flexDirection: 'row', alignItems: 'center', marginRight: 12},
-  gaugeWrapper: { width: 110, height: 110, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  gaugeCenter:  { position: 'absolute', alignItems: 'center' },
-  gaugeLabelTop:{ fontFamily: FONT.mono, fontSize: 7, color: COLORS.textMuted, letterSpacing: 1, textAlign: 'center' },
-  gaugeLabelBot:{ fontFamily: FONT.mono, fontSize: 7, color: COLORS.orangeDim, textAlign: 'center' },
-
-  ringOuter: { position: 'absolute', width: 100, height: 100, alignItems: 'center', justifyContent: 'center' },
-  ringInner: { position: 'absolute', width: 70,  height: 70,  alignItems: 'center', justifyContent: 'center' },
-  ringOuterCyan: {},
-  ringDot:      { position: 'absolute', width: 4, height: 4, borderRadius: 2, backgroundColor: COLORS.orange },
-  ringDotSmall: { position: 'absolute', width: 3, height: 3, borderRadius: 1.5, backgroundColor: COLORS.orangeDim },
-  ringDotCyan:  { position: 'absolute', width: 4, height: 4, borderRadius: 2, backgroundColor: COLORS.cyan },
-  centerSep:    { width: 1, height: 80, backgroundColor: COLORS.borderOrange, opacity: 0.4 },
-
-  cartStatusRow: { flexDirection: 'row', marginRight: 6, marginTop: 16, flexWrap: 'wrap', justifyContent: 'center' },
-  cartPill:      { flexDirection: 'row', alignItems: 'center', marginRight: 4, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: COLORS.borderOrange, borderRadius: 4 },
-  cartPillText:  { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textSecondary },
-
-  avgRow:   { flexDirection: 'row', alignItems: 'center', marginRight: 6, marginTop: 10 },
-  avgLabel: { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textMuted },
-
-  // RIGHT
-  rightPanel: { width: SCREEN_WIDTH * 0.26, backgroundColor: COLORS.bgPanel, borderLeftWidth: 1, borderLeftColor: COLORS.borderCyan, padding: 8 },
-  circlesRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 },
-  circleItem: { alignItems: 'center' },
-
-  syncBlock:  { marginBottom: 12 },
-  syncHeader: { flexDirection: 'row', alignItems: 'center', marginRight: 5, marginBottom: 6 },
-  syncLabel:  { fontFamily: FONT.mono, fontSize: 8, color: COLORS.amber },
-  syncBarBg:  { height: 3, backgroundColor: COLORS.borderMuted, borderRadius: 2, overflow: 'hidden' },
-  syncBarFill:{ height: '100%', backgroundColor: COLORS.amber, borderRadius: 2 },
-  syncPct:    { fontFamily: FONT.mono, fontSize: 7, color: COLORS.amberDim, marginTop: 3 },
-
-  metricsBlock: {},
-  metricRow:    { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: COLORS.borderMuted },
-  metricLabel:  { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textMuted },
-  metricVal:    { fontFamily: FONT.mono, fontSize: 9, fontWeight: 'bold' },
+const st = StyleSheet.create({
+  root:        { flex: 1, backgroundColor: C.bg },
+  header:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.bOrange, backgroundColor: C.bgPanel },
+  headerTitle: { fontFamily: F, fontSize: 13, color: C.orange, letterSpacing: 2 },
+  body:        { flex: 1, flexDirection: 'row' },
+  logPanel:    { width: W * 0.22, backgroundColor: C.bgPanel, borderRightWidth: 1, borderRightColor: C.bOrange, padding: 8 },
+  panelTitle:  { fontFamily: F, fontSize: 9, letterSpacing: 1.5, marginBottom: 6 },
+  divider:     { height: 1, borderBottomWidth: 1, borderColor: C.bOrange, marginBottom: 8, opacity: 0.6 },
+  logTime:     { fontFamily: F, fontSize: 7, color: C.w25 },
+  logMsg:      { fontFamily: F, fontSize: 8, letterSpacing: 0.4 },
+  center:      { flex: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  centerSub:   { fontFamily: F, fontSize: 8, color: C.w25, letterSpacing: 2, marginBottom: 16 },
+  rightPanel:  { width: W * 0.26, backgroundColor: C.bgPanel, borderLeftWidth: 1, borderLeftColor: C.bCyan, padding: 8 },
+  cartPill:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 7, paddingVertical: 3, borderWidth: 1, borderRadius: 4 },
+  metricRow:   { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: C.w08 },
+  metricLabel: { fontFamily: F, fontSize: 8, color: C.w25 },
+  metricVal:   { fontFamily: F, fontSize: 9, fontWeight: 'bold' },
+  micro:       { fontFamily: F, fontSize: 8 },
+  barBg:       { backgroundColor: C.w08, borderRadius: 2, overflow: 'hidden', width: '100%' },
 });
 
 module.exports = DashboardScreen;
