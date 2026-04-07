@@ -1,145 +1,75 @@
 const React = require('react');
-const { useState, useEffect, useRef, memo } = React;
-const {
-  View, Text, ScrollView, StyleSheet, Animated,
-  SafeAreaView, Pressable, TextInput, Alert, Easing,
-} = require('react-native');
+const { useState, memo } = React;
+const { View, Text, ScrollView, StyleSheet, SafeAreaView, Pressable, TextInput, Alert } = require('react-native');
 const { doc, setDoc, deleteDoc, serverTimestamp } = require('firebase/firestore');
 const { db } = require('../firebase/firebaseConfig');
-
-const { GlowBorder, BlinkLed, CircularGauge, AnimatedNumber, ScanLine } = require('../components/Animations');
+const { Led, Scan, Gauge, Bar, Gear, Num, Card } = require('../components/Atoms');
 const { useAllCarts, useCartOrders } = require('../hooks/useFirestore');
-const { COLORS, FONT } = require('../constants');
+const { C, F } = require('../constants');
 
-/* ─── Gear — engrenage holographique ─── */
-const HoloGear = memo(({ color = COLORS.orange, size = 60, rpm = 1, label = '', status = 'ok' }) => {
-  const anim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: status === 'low' ? 6000 / rpm : 3000 / rpm,
-        useNativeDriver: true,
-        easing: Easing.linear,
-      })
-    ).start();
-  }, [rpm, status]);
-
-  const rotate   = anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-  const gearColor = status === 'critical' ? COLORS.red : status === 'low' ? COLORS.amber : color;
-
-  return (
-    <View style={[styles.gearWrapper, { width: size, height: size }]}>
-      <Animated.View style={[styles.gearOuter, {
-        width: size, height: size, borderRadius: size / 2,
-        borderColor: gearColor, transform: [{ rotate }],
-        shadowColor: gearColor,
-      }]}>
-        {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
-          <View key={deg} style={[styles.gearTooth, {
-            transform: [{ rotate: `${deg}deg` }, { translateY: -(size / 2 - 2) }],
-            backgroundColor: gearColor, width: 4, height: 6,
-          }]} />
-        ))}
-      </Animated.View>
-      <View style={styles.gearCenter}>
-        <Text style={[styles.gearLabel, { color: gearColor, fontSize: size * 0.12 }]}>{label}</Text>
-      </View>
-    </View>
-  );
-});
-
-/* ─── Stock Level ─── */
-const StockBar = memo(({ label, value, max = 100 }) => {
-  const anim  = useRef(new Animated.Value(0)).current;
-  const pct   = Math.min(value / max, 1);
-  const color = pct < 0.2 ? COLORS.red : pct < 0.5 ? COLORS.amber : COLORS.cyan;
-
-  useEffect(() => {
-    Animated.timing(anim, { toValue: pct, duration: 1000, useNativeDriver: false, easing: Easing.out(Easing.cubic) }).start();
-  }, [value]);
-
-  const status = pct < 0.2 ? 'critical' : pct < 0.5 ? 'low' : 'ok';
-
-  return (
-    <View style={styles.stockRow}>
-      <HoloGear color={color} size={28} rpm={pct < 0.2 ? 0.3 : pct < 0.5 ? 0.6 : 1.2} label="" status={status} />
-      <View style={{ flex: 1 }}>
-        <View style={styles.stockLabelRow}>
-          <Text style={styles.stockLabel}>{label}</Text>
-          <AnimatedNumber value={Math.round(pct * 100)} suffix="%" fontSize={10} color={color} />
-        </View>
-        <View style={styles.stockBarBg}>
-          <Animated.View style={[styles.stockBarFill, {
-            width: anim.interpolate({ inputRange: [0,1], outputRange: ['0%','100%'] }),
-            backgroundColor: color, shadowColor: color,
-          }]} />
-        </View>
-        {pct < 0.2 && (
-          <Text style={styles.stockAlert}>⚠ STOCK_CRITIQUE</Text>
-        )}
-      </View>
-    </View>
-  );
-});
-
-/* ─── Cart Card ─── */
 const CartCard = memo(({ cart, onDelete }) => {
   const { orders } = useCartOrders(cart.id, 5);
   const today      = new Date().toLocaleDateString('fr-FR');
   const todayOrd   = orders.filter(o => o.date === today);
   const todayTotal = todayOrd.reduce((s, o) => s + (o.total || 0), 0);
-  const isOnline   = cart.updatedAt ? (Date.now()/1000 - cart.updatedAt.seconds) < 300 : false;
+  const isOnline   = cart.updatedAt && (Date.now()/1000 - cart.updatedAt.seconds) < 300;
 
-  // Stocks simulés — seront remplacés par vraies données Firestore
   const stocks = [
-    { label: 'HUILE',   value: 65 },
-    { label: 'FRITES',  value: 42 },
-    { label: 'BOISSONS',value: 78 },
-    { label: 'EMBALL.', value: 15 },
+    { label: 'HUILE',    val: 65, max: 100 },
+    { label: 'FRITES',   val: 42, max: 100 },
+    { label: 'BOISSONS', val: 78, max: 100 },
+    { label: 'EMBALL.',  val: 15, max: 100 },
   ];
 
   return (
-    <GlowBorder color={isOnline ? COLORS.orange : COLORS.red} style={styles.cartCard}>
-      {/* En-tête */}
-      <View style={styles.cartHeader}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 8}}>
-          <BlinkLed color={isOnline ? COLORS.cyan : COLORS.red} size={7} />
-          <View>
-            <Text style={styles.cartName}>{(cart.cartName || cart.id).toUpperCase()}</Text>
-            <Text style={styles.cartId}>ID: {cart.id}</Text>
+    <Card color={isOnline ? C.orange : C.red} style={{ marginBottom: 12 }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Led color={isOnline ? C.cyan : C.red} size={7} />
+          <View style={{ marginLeft: 8 }}>
+            <Text style={[st.mono11, { color: C.white }]}>{(cart.cartName || cart.id).toUpperCase()}</Text>
+            <Text style={[st.micro, { color: C.w25, marginTop: 2 }]}>ID: {cart.id}</Text>
           </View>
         </View>
-        <View style={styles.cartHeaderRight}>
-          <AnimatedNumber value={todayTotal.toLocaleString('fr-FR')} suffix=" F" fontSize={14} color={COLORS.orange} />
+        <View style={{ alignItems: 'flex-end' }}>
+          <Num val={todayTotal.toLocaleString('fr-FR')} size={14} color={C.orange} suf=" F" />
           <Pressable onPress={() => Alert.alert('Supprimer', `Supprimer "${cart.cartName || cart.id}" ?`, [
             { text: 'Annuler', style: 'cancel' },
-            { text: 'Supprimer', style: 'destructive', onPress: () => deleteDoc(doc(db, 'carts', cart.id)) },
-          ])} style={{ padding: 4 }}>
-            <Text style={{ color: COLORS.red, fontFamily: FONT.mono, fontSize: 14 }}>✕</Text>
+            { text: 'Supprimer', style: 'destructive', onPress: () => onDelete(cart.id) },
+          ])} style={{ marginTop: 6 }}>
+            <Text style={[st.mono11, { color: C.red }]}>✕</Text>
           </Pressable>
         </View>
       </View>
-
-      {/* Jauges + stocks en colonnes */}
-      <View style={styles.cartBody}>
-        {/* Gauche : jauges circulaires */}
-        <View style={styles.gaugesCol}>
-          <CircularGauge value={todayOrd.length} max={50} size={64} color={COLORS.orange} label="CMD" />
-          <CircularGauge value={isOnline ? 95 : 0} max={100} size={64} color={COLORS.cyan} label="UPTIME" />
+      {/* Corps : engrenages + stocks */}
+      <View style={{ flexDirection: 'row' }}>
+        {/* Engrenages */}
+        <View style={{ alignItems: 'center', marginRight: 16 }}>
+          <Gear size={44} color={isOnline ? C.orange : C.red} slow={!isOnline} />
+          <Gauge val={todayOrd.length} max={50} size={60} color={C.cyan} label="CMD" />
         </View>
-
-        {/* Droite : stocks */}
-        <View style={styles.stocksCol}>
-          {stocks.map(s => <StockBar key={s.label} {...s} />)}
+        {/* Stocks */}
+        <View style={{ flex: 1 }}>
+          {stocks.map(s => {
+            const col = s.val < 20 ? C.red : s.val < 50 ? C.amber : C.cyan;
+            return (
+              <View key={s.label} style={{ marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 }}>
+                  <Text style={[st.micro, { color: C.w25 }]}>{s.label}</Text>
+                  <Text style={[st.micro, { color: col, fontWeight: 'bold' }]}>{s.val}%</Text>
+                </View>
+                <Bar val={s.val} max={s.max} color={col} h={3} />
+                {s.val < 20 && <Text style={[st.micro, { color: C.red, marginTop: 2 }]}>⚠ STOCK_CRITIQUE</Text>}
+              </View>
+            );
+          })}
         </View>
       </View>
-    </GlowBorder>
+    </Card>
   );
 });
 
-/* ─── ÉCRAN PRINCIPAL ─── */
 const CartsScreen = () => {
   const { carts, loading } = useAllCarts();
   const [newId,   setNewId]   = useState('');
@@ -149,95 +79,49 @@ const CartsScreen = () => {
     const id = newId.trim();
     if (!id) return;
     try {
-      await setDoc(doc(db, 'carts', id), {
-        cartId: id, cartName: newName.trim() || id,
-        createdAt: serverTimestamp(),
-      });
+      await setDoc(doc(db, 'carts', id), { cartId: id, cartName: newName.trim() || id, createdAt: serverTimestamp() });
       setNewId(''); setNewName('');
     } catch (e) { Alert.alert('Erreur', e.message); }
   };
 
+  const handleDelete = async (id) => {
+    try { await deleteDoc(doc(db, 'carts', id)); } catch (e) { Alert.alert('Erreur', e.message); }
+  };
+
   return (
-    <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.amber} containerHeight={600} />
-
-      <View style={styles.header}>
-        <BlinkLed color={COLORS.amber} size={6} />
-        <Text style={styles.headerTitle}>CONSOLE MÉCANIQUE · CARTS</Text>
-        <Text style={styles.headerSub}>{carts.length} ENREGISTRÉ(S)</Text>
+    <SafeAreaView style={st.root}>
+      <Scan color={C.amber} h={700} />
+      <View style={st.header}>
+        <Led color={C.amber} size={6} />
+        <Text style={[st.mono11, { color: C.amber, letterSpacing: 2, marginLeft: 8 }]}>CONSOLE MÉCANIQUE · CARTS</Text>
+        <Text style={[st.micro, { color: C.w25, marginLeft: 8 }]}>{carts.length} ENREGISTRÉ(S)</Text>
       </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
-        {/* Formulaire */}
-        <GlowBorder color={COLORS.amber} style={styles.addForm}>
-          <Text style={styles.formTitle}>// DEPLOY_NEW_CART</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="cart_id (ex: cart_01)"
-            placeholderTextColor={COLORS.textMuted}
-            value={newId} onChangeText={setNewId} autoCapitalize="none"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Nom affiché (ex: Cart Centre)"
-            placeholderTextColor={COLORS.textMuted}
-            value={newName} onChangeText={setNewName}
-          />
-          <Pressable style={styles.deployBtn} onPress={handleAdd}>
-            <Text style={styles.deployBtnText}>▶ DEPLOY_CART</Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 12, paddingBottom: 30 }}
+        keyboardShouldPersistTaps="handled">
+        <Card color={C.amber} style={{ marginBottom: 14 }}>
+          <Text style={[st.micro, { color: C.amber, letterSpacing: 2, marginBottom: 10 }]}>// DEPLOY_NEW_CART</Text>
+          <TextInput style={st.input} placeholder="cart_id (ex: cart_01)" placeholderTextColor={C.w25}
+            value={newId} onChangeText={setNewId} autoCapitalize="none" />
+          <TextInput style={[st.input, { marginTop: 8 }]} placeholder="Nom affiché" placeholderTextColor={C.w25}
+            value={newName} onChangeText={setNewName} />
+          <Pressable style={[st.btn, { borderColor: C.amber }]} onPress={handleAdd}>
+            <Text style={[st.micro, { color: C.amber, letterSpacing: 2 }]}>▶ DEPLOY_CART</Text>
           </Pressable>
-        </GlowBorder>
-
-        {loading && <Text style={styles.loadingText}>SCANNING_NETWORK...</Text>}
-        {carts.map(cart => <CartCard key={cart.id} cart={cart} onDelete={() => {}} />)}
-
+        </Card>
+        {loading && <Text style={[st.micro, { color: C.w25, textAlign: 'center', marginTop: 20 }]}>SCANNING_NETWORK...</Text>}
+        {carts.map(c => <CartCard key={c.id} cart={c} onDelete={handleDelete} />)}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: COLORS.bg },
-  header: {
-    flexDirection: 'row', alignItems: 'center', marginRight: 8,
-    paddingHorizontal: 12, paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: COLORS.amberDim,
-    backgroundColor: COLORS.bgPanel,
-  },
-  headerTitle: { fontFamily: FONT.mono, fontSize: 11, color: COLORS.amber, letterSpacing: 2, flex: 1 },
-  headerSub:   { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted },
-  scroll:      { padding: 12, paddingBottom: 30 },
-
-  addForm:   { padding: 12, marginBottom: 14 },
-  formTitle: { fontFamily: FONT.mono, fontSize: 9, color: COLORS.amber, letterSpacing: 1.5, marginBottom: 10 },
-  input:     { backgroundColor: COLORS.bgCard, color: COLORS.textPrimary, borderWidth: 1, borderColor: COLORS.borderMuted, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 8, fontFamily: FONT.mono, fontSize: 11, marginBottom: 8 },
-  deployBtn: { backgroundColor: COLORS.amberDim, borderWidth: 1, borderColor: COLORS.amber, borderRadius: 4, padding: 10, alignItems: 'center' },
-  deployBtnText: { fontFamily: FONT.mono, fontSize: 10, color: COLORS.amber, letterSpacing: 2 },
-
-  cartCard:  { padding: 12, marginBottom: 12 },
-  cartHeader:{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
-  cartName:  { fontFamily: FONT.mono, fontSize: 13, color: COLORS.textPrimary, letterSpacing: 1 },
-  cartId:    { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted, marginTop: 2 },
-  cartHeaderRight: { alignItems: 'flex-end', marginRight: 4},
-  cartBody:  { flexDirection: 'row', marginRight: 12},
-  gaugesCol: { marginRight: 8, alignItems: 'center' },
-  stocksCol: { flex: 1, marginRight: 8},
-
-  gearWrapper: { alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  gearOuter:   { borderWidth: 2, position: 'absolute', alignItems: 'center', justifyContent: 'center', shadowOpacity: 0.6, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 4 },
-  gearTooth:   { position: 'absolute', borderRadius: 1 },
-  gearCenter:  { alignItems: 'center', justifyContent: 'center' },
-  gearLabel:   { fontFamily: FONT.mono, fontWeight: 'bold', textAlign: 'center' },
-
-  stockRow:      { flexDirection: 'row', alignItems: 'center', marginRight: 8},
-  stockLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 3 },
-  stockLabel:    { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textMuted },
-  stockBarBg:    { height: 3, backgroundColor: COLORS.borderMuted, borderRadius: 2, overflow: 'hidden' },
-  stockBarFill:  { height: '100%', borderRadius: 2, shadowOpacity: 0.8, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } },
-  stockAlert:    { fontFamily: FONT.mono, fontSize: 7, color: COLORS.red, marginTop: 2 },
-
-  loadingText: { fontFamily: FONT.mono, fontSize: 9, color: COLORS.textMuted, textAlign: 'center', padding: 20 },
+const st = StyleSheet.create({
+  root:   { flex: 1, backgroundColor: C.bg },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.amberD, backgroundColor: C.bgPanel },
+  mono11: { fontFamily: F, fontSize: 11 },
+  micro:  { fontFamily: F, fontSize: 8 },
+  input:  { backgroundColor: C.bgCard, color: C.white, borderWidth: 1, borderColor: C.w08, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 8, fontFamily: F, fontSize: 11 },
+  btn:    { marginTop: 10, borderWidth: 1, borderRadius: 4, padding: 10, alignItems: 'center' },
 });
 
 module.exports = CartsScreen;
