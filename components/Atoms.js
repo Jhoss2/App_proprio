@@ -107,12 +107,18 @@ const Bar = memo(({ val = 0, max = 100, color = C.orange, h = 4 }) => {
   const a   = useRef(new Animated.Value(0)).current;
   const pct = Math.min(Math.max(val / max, 0), 1);
   useEffect(() => {
-    Animated.timing(a, { toValue: pct, duration: 900, useNativeDriver: false, easing: Easing.out(Easing.cubic) }).start();
+    Animated.timing(a, { toValue: pct, duration: 900, useNativeDriver: true, easing: Easing.out(Easing.cubic) }).start();
   }, [val]);
-  const w = a.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
+  // opacity seule animation safe pour la largeur sans pixel connu
+  // On simule avec une longue barre dont l'opacité représente le remplissage
+  // Alternative fiable: afficher N segments colorés/gris selon pct
+  const segments = 20;
+  const filled = Math.round(pct * segments);
   return (
-    <View style={[s.barBg, { height: h }]}>
-      <Animated.View style={{ height: h, width: w, backgroundColor: color, borderRadius: h / 2 }} />
+    <View style={[s.barBg, { height: h, flexDirection: 'row', overflow: 'hidden' }]}>
+      {Array.from({ length: segments }, (_, i) => (
+        <View key={i} style={{ flex: 1, height: h, backgroundColor: i < filled ? color : 'transparent' }} />
+      ))}
     </View>
   );
 });
@@ -148,14 +154,17 @@ const Rain = memo(({ width = 300, n = 8 }) => (
 
 /* ── Égaliseur (barres animées) ─────────────── */
 const EqBar = memo(({ pct = 0, color = C.orange, width = 14 }) => {
-  const a = useRef(new Animated.Value(0)).current;
+  const a = useRef(new Animated.Value(0.04)).current;
   useEffect(() => {
-    Animated.spring(a, { toValue: pct, useNativeDriver: false, tension: 60, friction: 7 }).start();
+    Animated.timing(a, { toValue: Math.max(pct, 0.04), duration: 400, useNativeDriver: true, easing: Easing.out(Easing.quad) }).start();
   }, [pct]);
-  const h = a.interpolate({ inputRange: [0, 1], outputRange: [3, 80] });
+  // scaleY depuis le bas : on utilise une vue de 80px et on scale
   return (
-    <View style={{ width, alignItems: 'center', justifyContent: 'flex-end', height: 80 }}>
-      <Animated.View style={{ width, height: h, backgroundColor: color, borderRadius: 2 }} />
+    <View style={{ width, alignItems: 'center', justifyContent: 'flex-end', height: 80, overflow: 'hidden' }}>
+      <Animated.View style={{
+        width, height: 80, backgroundColor: color, borderRadius: 2,
+        transform: [{ scaleY: a }],
+      }} />
     </View>
   );
 });
@@ -213,4 +222,4 @@ const s = StyleSheet.create({
 });
 
 module.exports = { Led, Scan, Glitch, Num, Gauge, Bar, Rain, EqBar, Card, Gear };
-    
+          
