@@ -39,16 +39,18 @@ const Scan = memo(({ color = C.orange, h = 400 }) => {
 
 /* ── Texte glitch ────────────────────────────── */
 const Glitch = memo(({ text, style }) => {
+  // Pas de setInterval — Animated.loop pur, zéro charge bridge
   const a = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    const run = () => Animated.sequence([
-      Animated.timing(a, { toValue: 1, duration: 55,  useNativeDriver: true }),
-      Animated.timing(a, { toValue: 0, duration: 55,  useNativeDriver: true }),
-      Animated.timing(a, { toValue: 1, duration: 38,  useNativeDriver: true }),
-      Animated.timing(a, { toValue: 0, duration: 90,  useNativeDriver: true }),
-    ]).start();
-    const id = setInterval(run, 4200 + Math.random() * 2800);
-    return () => clearInterval(id);
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(4000),
+        Animated.timing(a, { toValue: 1, duration: 55,  useNativeDriver: true }),
+        Animated.timing(a, { toValue: 0, duration: 55,  useNativeDriver: true }),
+        Animated.timing(a, { toValue: 1, duration: 38,  useNativeDriver: true }),
+        Animated.timing(a, { toValue: 0, duration: 90,  useNativeDriver: true }),
+      ])
+    ).start();
   }, []);
   const tx = a.interpolate({ inputRange: [0, 1], outputRange: [0, 2] });
   return <Animated.Text style={[style, { transform: [{ translateX: tx }] }]}>{text}</Animated.Text>;
@@ -125,14 +127,12 @@ const Bar = memo(({ val = 0, max = 100, color = C.orange, h = 4 }) => {
 
 /* ── Binary rain (View/Text only) ───────────── */
 const BinCol = memo(({ left, delay, dur }) => {
-  const a = useRef(new Animated.Value(0)).current;
+  const a = useRef(new Animated.Value(delay / (dur + delay))).current;
   useEffect(() => {
-    const t = setTimeout(() => {
-      Animated.loop(
-        Animated.timing(a, { toValue: 1, duration: dur, useNativeDriver: true, easing: Easing.linear })
-      ).start();
-    }, delay);
-    return () => clearTimeout(t);
+    // Démarre à une position décalée selon delay — pas de setTimeout
+    Animated.loop(
+      Animated.timing(a, { toValue: 1, duration: dur, useNativeDriver: true, easing: Easing.linear })
+    ).start();
   }, []);
   const ty = a.interpolate({ inputRange: [0, 1], outputRange: [-90, 350] });
   return (
