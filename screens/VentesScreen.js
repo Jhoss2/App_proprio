@@ -79,8 +79,8 @@ const VentesScreen = () => {
         <View style={{ flexDirection: 'row', marginBottom: 14 }}>
           {[
             { label: 'CMD_COUNT', val: String(todayOrd.length), color: C.orange },
-            { label: 'TOTAL_XOF', val: total.toLocaleString('fr-FR') + 'F', color: C.cyan  },
-            { label: 'AVG_VALUE', val: avg.toLocaleString('fr-FR') + 'F', color: C.amber },
+            { label: 'TOTAL_XOF', val: (total || 0).toLocaleString('fr-FR') + 'F', color: C.cyan  },
+            { label: 'AVG_VALUE', val: (avg || 0).toLocaleString('fr-FR') + 'F', color: C.amber },
           ].map((s, i) => (
             <Card key={s.label} color={s.color} style={{ flex: 1, alignItems: 'center', marginRight: i < 2 ? 8 : 0 }}>
               <Text style={[st.micro, { color: C.w25 }]}>{s.label}</Text>
@@ -137,4 +137,4 @@ const st = StyleSheet.create({
 });
 
 module.exports = VentesScreen;
-                                               
+  
