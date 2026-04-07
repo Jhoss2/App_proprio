@@ -1,81 +1,80 @@
 const React = require('react');
 const { useState, useEffect } = React;
-const {
-  View, Text, ScrollView, StyleSheet,
-  SafeAreaView, Pressable, TextInput, Switch,
-} = require('react-native');
+const { View, Text, ScrollView, StyleSheet, SafeAreaView, Pressable, TextInput, Switch } = require('react-native');
 const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-const { GlowBorder, BlinkLed, ScanLine, GlitchText } = require('../components/Animations');
-const { COLORS, FONT } = require('../constants');
+const { Led, Scan, Glitch, Card } = require('../components/Atoms');
+const { C, F } = require('../constants');
 
 const ConfigScreen = () => {
-  const [ownerName, setOwnerName]     = useState('');
-  const [pin, setPin]                 = useState('');
-  const [notifAlerts, setNotifAlerts] = useState(true);
-  const [notifOrders, setNotifOrders] = useState(true);
-  const [saved, setSaved]             = useState(false);
+  const [ownerName, setOwnerName] = useState('');
+  const [pin,       setPin]       = useState('');
+  const [notifAlerts, setNA]      = useState(true);
+  const [notifOrders, setNO]      = useState(true);
+  const [saved, setSaved]         = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem('proprio_config').then(v => {
-      if (v) { const c = JSON.parse(v); setOwnerName(c.ownerName||''); setNotifAlerts(c.notifAlerts!==false); setNotifOrders(c.notifOrders!==false); }
+      if (!v) return;
+      const c = JSON.parse(v);
+      setOwnerName(c.ownerName || '');
+      setNA(c.notifAlerts !== false);
+      setNO(c.notifOrders !== false);
     });
   }, []);
 
-  const handleSave = async () => {
+  const save = async () => {
     await AsyncStorage.setItem('proprio_config', JSON.stringify({ ownerName, pin, notifAlerts, notifOrders }));
     setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
-  const rows = [
-    { label: 'APPLICATION',  val: "NINJA'S CORP",      color: COLORS.orange },
-    { label: 'VERSION',      val: '2.0.0 · DSO',       color: COLORS.textSecondary },
-    { label: 'FIREBASE_ID',  val: 'ninja-s-fries',      color: COLORS.cyan },
-    { label: 'WEBRTC',       val: 'P2P · TURN RELAY',  color: COLORS.amber },
-    { label: 'RENDER',       val: 'React Native 0.74', color: COLORS.textMuted },
-    { label: 'DESIGN',       val: 'Deep Space Orange', color: COLORS.orange },
+  const info = [
+    { label: 'APP',       val: "NINJA'S CORP",    color: C.orange },
+    { label: 'VERSION',   val: '3.0 · DSO',        color: C.w60   },
+    { label: 'FIREBASE',  val: 'ninja-s-fries',     color: C.cyan  },
+    { label: 'WEBRTC',    val: 'P2P · TURN RELAY', color: C.amber },
+    { label: 'PLATFORM',  val: 'Android · Expo 51',color: C.w25   },
   ];
 
   return (
-    <SafeAreaView style={styles.root}>
-      <ScanLine color={COLORS.amber} containerHeight={600} />
-      <View style={styles.header}>
-        <BlinkLed color={COLORS.amber} size={6} />
-        <GlitchText text="SYSTEM_CONFIG" style={styles.headerTitle} />
-        <Text style={styles.headerSub}>NINJA CORP v2.0</Text>
+    <SafeAreaView style={st.root}>
+      <Scan color={C.amber} h={700} />
+      <View style={st.header}>
+        <Led color={C.amber} size={6} />
+        <Glitch text="SYSTEM_CONFIG" style={[st.mono11, { color: C.amber, letterSpacing: 2, marginLeft: 8 }]} />
       </View>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-
-        <GlowBorder color={COLORS.orange} style={styles.section}>
-          <Text style={styles.sTitle}>// IDENTITY</Text>
-          <TextInput style={styles.input} placeholder="Nom du propriétaire" placeholderTextColor={COLORS.textMuted} value={ownerName} onChangeText={setOwnerName} />
-          <TextInput style={styles.input} placeholder="Code PIN (optionnel)" placeholderTextColor={COLORS.textMuted} value={pin} onChangeText={setPin} secureTextEntry keyboardType="numeric" maxLength={6} />
-        </GlowBorder>
-
-        <GlowBorder color={COLORS.cyan} style={styles.section}>
-          <Text style={styles.sTitle}>// NOTIFICATIONS</Text>
+      <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <Card color={C.orange} style={{ marginBottom: 12 }}>
+          <Text style={[st.micro, { color: C.amber, letterSpacing: 2, marginBottom: 10 }]}>// IDENTITY</Text>
+          <TextInput style={st.input} placeholder="Nom du propriétaire" placeholderTextColor={C.w25}
+            value={ownerName} onChangeText={setOwnerName} />
+          <TextInput style={[st.input, { marginTop: 8 }]} placeholder="Code PIN (optionnel)" placeholderTextColor={C.w25}
+            value={pin} onChangeText={setPin} secureTextEntry keyboardType="numeric" maxLength={6} />
+        </Card>
+        <Card color={C.cyan} style={{ marginBottom: 12 }}>
+          <Text style={[st.micro, { color: C.amber, letterSpacing: 2, marginBottom: 10 }]}>// NOTIFICATIONS</Text>
           {[
-            { label: 'CART_ALERTS',   val: notifAlerts, set: setNotifAlerts },
-            { label: 'ORDER_STREAM',  val: notifOrders, set: setNotifOrders },
+            { label: 'CART_ALERTS',  val: notifAlerts, set: setNA },
+            { label: 'ORDER_STREAM', val: notifOrders, set: setNO },
           ].map(s => (
-            <View key={s.label} style={styles.switchRow}>
-              <Text style={styles.switchLabel}>{s.label}</Text>
-              <Switch value={s.val} onValueChange={s.set} trackColor={{ false:'#1a1a2e', true: COLORS.cyanDim }} thumbColor={s.val ? COLORS.cyan : '#444'} />
+            <View key={s.label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 }}>
+              <Text style={[st.micro, { color: C.w60, letterSpacing: 1 }]}>{s.label}</Text>
+              <Switch value={s.val} onValueChange={s.set}
+                trackColor={{ false: '#1a1a2e', true: C.cyanD }}
+                thumbColor={s.val ? C.cyan : '#444'} />
             </View>
           ))}
-        </GlowBorder>
-
-        <GlowBorder color={COLORS.amber} style={styles.section}>
-          <Text style={styles.sTitle}>// SYSTEM_INFO</Text>
-          {rows.map(r => (
-            <View key={r.label} style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{r.label}</Text>
-              <Text style={[styles.infoVal, { color: r.color }]}>{r.val}</Text>
+        </Card>
+        <Card color={C.amber} style={{ marginBottom: 14 }}>
+          <Text style={[st.micro, { color: C.amber, letterSpacing: 2, marginBottom: 10 }]}>// SYSTEM_INFO</Text>
+          {info.map(r => (
+            <View key={r.label} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: C.w08 }}>
+              <Text style={[st.micro, { color: C.w25 }]}>{r.label}</Text>
+              <Text style={[st.micro, { color: r.color, fontWeight: 'bold' }]}>{r.val}</Text>
             </View>
           ))}
-        </GlowBorder>
-
-        <Pressable style={[styles.saveBtn, saved && styles.saveBtnOk]} onPress={handleSave}>
-          <Text style={[styles.saveBtnText, saved && { color: COLORS.cyan }]}>
+        </Card>
+        <Pressable style={[st.saveBtn, saved && { borderColor: C.cyan }]} onPress={save}>
+          <Text style={[st.mono11, { color: saved ? C.cyan : C.orange, letterSpacing: 2 }]}>
             {saved ? '✓ CONFIG_SAVED' : '▶ SAVE_CONFIG'}
           </Text>
         </Pressable>
@@ -84,23 +83,13 @@ const ConfigScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  root:   { flex: 1, backgroundColor: COLORS.bg },
-  header: { flexDirection: 'row', alignItems: 'center', marginRight: 8, paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: COLORS.amberDim, backgroundColor: COLORS.bgPanel },
-  headerTitle: { fontFamily: FONT.mono, fontSize: 11, color: COLORS.amber, letterSpacing: 2, flex: 1 },
-  headerSub:   { fontFamily: FONT.mono, fontSize: 8,  color: COLORS.textMuted },
-  scroll:      { padding: 12, paddingBottom: 40 },
-  section:     { padding: 12, marginBottom: 12 },
-  sTitle:      { fontFamily: FONT.mono, fontSize: 9, color: COLORS.amber, letterSpacing: 2, marginBottom: 10 },
-  input:       { backgroundColor: COLORS.bgCard, color: COLORS.textPrimary, borderWidth: 1, borderColor: COLORS.borderMuted, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 8, fontFamily: FONT.mono, fontSize: 12, marginBottom: 8 },
-  switchRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-  switchLabel: { fontFamily: FONT.mono, fontSize: 10, color: COLORS.textSecondary, letterSpacing: 1 },
-  infoRow:     { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 5, borderBottomWidth: 1, borderBottomColor: COLORS.borderMuted },
-  infoLabel:   { fontFamily: FONT.mono, fontSize: 8, color: COLORS.textMuted },
-  infoVal:     { fontFamily: FONT.mono, fontSize: 9, fontWeight: 'bold' },
-  saveBtn:     { backgroundColor: COLORS.orangeGlow, borderWidth: 1, borderColor: COLORS.orange, borderRadius: 4, padding: 14, alignItems: 'center', shadowColor: COLORS.orange, shadowOpacity: 0.5, shadowRadius: 10, shadowOffset: {width:0,height:0}, elevation: 6 },
-  saveBtnOk:   { borderColor: COLORS.cyan },
-  saveBtnText: { fontFamily: FONT.mono, fontSize: 12, color: COLORS.orange, letterSpacing: 2 },
+const st = StyleSheet.create({
+  root:    { flex: 1, backgroundColor: C.bg },
+  header:  { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.amberD, backgroundColor: C.bgPanel },
+  mono11:  { fontFamily: F, fontSize: 11 },
+  micro:   { fontFamily: F, fontSize: 8 },
+  input:   { backgroundColor: C.bgCard, color: C.white, borderWidth: 1, borderColor: C.w08, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 8, fontFamily: F, fontSize: 12 },
+  saveBtn: { borderWidth: 1, borderColor: C.orange, borderRadius: 4, padding: 14, alignItems: 'center' },
 });
 
 module.exports = ConfigScreen;
