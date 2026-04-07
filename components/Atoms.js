@@ -31,7 +31,7 @@ const Scan = memo(({ color = C.orange, h = 400 }) => {
   }, []);
   const ty = a.interpolate({ inputRange: [0, 1], outputRange: [-10, h] });
   return (
-    <Animated.View pointerEvents="none" style={[s.scanWrap, { transform: [{ translateY: ty }] }]}>
+    <Animated.View style={[s.scanWrap, { transform: [{ translateY: ty }] }]}>
       <View style={[s.scanBar, { backgroundColor: color }]} />
     </Animated.View>
   );
@@ -139,9 +139,9 @@ const BinCol = memo(({ left, delay, dur }) => {
 });
 
 const Rain = memo(({ width = 300, n = 8 }) => (
-  <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width, overflow: 'hidden', opacity: 0.13 }} pointerEvents="none">
+  <View style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width, overflow: 'hidden', opacity: 0.13 }}>
     {Array.from({ length: n }, (_, i) => (
-      <BinCol key={i} left={(width / n) * i} delay={i * 260} dur={2100 + i * 380} />
+      <BinCol key={i} left={n > 0 ? (width / n) * i : 0} delay={i * 260} dur={2100 + i * 380} />
     ))}
   </View>
 ));
@@ -213,4 +213,4 @@ const s = StyleSheet.create({
 });
 
 module.exports = { Led, Scan, Glitch, Num, Gauge, Bar, Rain, EqBar, Card, Gear };
-
+    
