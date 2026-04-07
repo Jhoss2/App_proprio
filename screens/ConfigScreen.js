@@ -22,9 +22,15 @@ const ConfigScreen = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (!saved) return;
+    const id = setTimeout(() => setSaved(false), 2000);
+    return () => clearTimeout(id);
+  }, [saved]);
+
   const save = async () => {
     await AsyncStorage.setItem('proprio_config', JSON.stringify({ ownerName, pin, notifAlerts, notifOrders }));
-    setSaved(true); setTimeout(() => setSaved(false), 2000);
+    setSaved(true);
   };
 
   const info = [
@@ -93,4 +99,3 @@ const st = StyleSheet.create({
 });
 
 module.exports = ConfigScreen;
-                                            
