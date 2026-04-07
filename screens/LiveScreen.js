@@ -84,9 +84,8 @@ const Feed = memo(({ cart }) => {
   const [motionAlert, setMotion]    = useState(false);
 
   const connect = () => {
-    setConnecting(true);
-    // WebRTC sera branché ici — pour l'instant placeholder stable
-    setTimeout(() => { setConnecting(false); }, 3000);
+    // Placeholder — WebRTC sera intégré en phase 2
+    setConnecting(false);
   };
   const disconnect = () => { setConnected(false); };
 
@@ -161,4 +160,4 @@ const st = StyleSheet.create({
 });
 
 module.exports = LiveScreen;
-        
+                 
