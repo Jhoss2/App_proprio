@@ -1,45 +1,30 @@
 const React = require('react');
 const { useEffect } = React;
-const { View, StyleSheet, StatusBar } = require('react-native');
-const { NavigationContainer }        = require('@react-navigation/native');
-const { GestureHandlerRootView }     = require('react-native-gesture-handler');
-const { SafeAreaProvider }           = require('react-native-safe-area-context');
-
+const { StatusBar, StyleSheet } = require('react-native');
+const { GestureHandlerRootView } = require('react-native-gesture-handler');
+const { SafeAreaProvider }       = require('react-native-safe-area-context');
+const { NavigationContainer }    = require('@react-navigation/native');
 const BottomTabNav = require('./navigation/BottomTabNav');
-const { COLORS }   = require('./constants');
+const { C } = require('./constants');
 
 function App() {
   useEffect(() => {
     StatusBar.setBarStyle('light-content');
     StatusBar.setBackgroundColor('#000000');
   }, []);
-
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#000000' }}>
       <SafeAreaProvider>
-        <NavigationContainer
-          theme={{
-            dark: true,
-            colors: {
-              primary:      COLORS.orange,
-              background:   COLORS.bg,
-              card:         '#020205',
-              text:         COLORS.textPrimary,
-              border:       COLORS.borderOrange,
-              notification: COLORS.orange,
-            },
-          }}
-        >
-          <StatusBar barStyle="light-content" backgroundColor="#000000" translucent={false} />
+        <NavigationContainer theme={{
+          dark: true,
+          colors: { primary: C.orange, background: C.bg, card: '#020205', text: C.white, border: C.bOrange, notification: C.orange },
+        }}>
+          <StatusBar barStyle="light-content" backgroundColor="#000000" />
           <BottomTabNav />
         </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000000' },
-});
 
 module.exports = App;
