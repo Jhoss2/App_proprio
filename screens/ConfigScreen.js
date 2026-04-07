@@ -93,4 +93,4 @@ const st = StyleSheet.create({
 });
 
 module.exports = ConfigScreen;
-  
+                                            
