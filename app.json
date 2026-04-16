@@ -3,7 +3,7 @@
     "name": "Ninja's Corp",
     "slug": "ninja-proprio",
     "version": "2.0.0",
-    "orientation": "landscape",
+    "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ninjasfries.proprio"
@@ -26,9 +28,14 @@
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
-        "VIBRATE"
+        "VIBRATE",
+        "READ_MEDIA_IMAGES",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
       ]
     },
-    "plugins": []
+    "plugins": [
+      "expo-image-picker"
+    ]
   }
 }
