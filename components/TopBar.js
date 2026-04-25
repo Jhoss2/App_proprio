@@ -24,12 +24,6 @@ const FeMergeNode   = _svg.FeMergeNode    || (_svg.default && _svg.default.FeMer
 const ClipPath      = _svg.ClipPath       || (_svg.default && _svg.default.ClipPath);
 const Pattern       = _svg.Pattern        || (_svg.default && _svg.default.Pattern);
 const SvgImage      = _svg.Image          || (_svg.default && _svg.default.Image);
-const {
-  Svg, Defs, G, Path, Rect, Circle, Text: SvgText,
-  LinearGradient, RadialGradient, Stop, Pattern, Filter,
-  FeGaussianBlur, FeMerge, FeMergeNode, Image: SvgImage,
-  ClipPath, Use, Mask,
-} = SvgLib;
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const W = SW, H = SH * 0.155;
@@ -51,7 +45,7 @@ const TopBar = memo(({ cartCount = 3, annualPct = 100, logoUri = null, onLogoPre
 
   return (
     <View style={[styles.root, { width: W, height: H }]}>
-      <Svg width={W} height={H} viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="xMidYMid meet">
+      <Svg width={W} height={H} viewBox={'0 0 ' + VW + ' ' + VH} preserveAspectRatio="xMidYMid meet">
         <Defs>
           {/* Honeycomb pattern */}
           <Pattern id="hc" width="18" height="10.4" patternUnits="userSpaceOnUse">
@@ -165,3 +159,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = TopBar;
+            
