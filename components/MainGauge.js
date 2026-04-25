@@ -294,4 +294,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = MainGauge;
-      
+                      
