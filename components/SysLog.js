@@ -133,3 +133,4 @@ const styles = StyleSheet.create({
 });
 
 module.exports = SysLog;
+                    
