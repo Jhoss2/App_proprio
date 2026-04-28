@@ -5,25 +5,13 @@
 const React = require('react');
 const { useRef, useEffect, memo } = React;
 const { View, StyleSheet, Animated, Easing, Pressable, Dimensions } = require('react-native');
-const _svg          = require('react-native-svg');
-const Svg           = _svg.Svg            || (_svg.default && _svg.default.Svg)            || _svg;
-const Defs          = _svg.Defs           || (_svg.default && _svg.default.Defs);
-const G             = _svg.G              || (_svg.default && _svg.default.G);
-const Path          = _svg.Path           || (_svg.default && _svg.default.Path);
-const Circle        = _svg.Circle         || (_svg.default && _svg.default.Circle);
-const Rect          = _svg.Rect           || (_svg.default && _svg.default.Rect);
-const Line          = _svg.Line           || (_svg.default && _svg.default.Line);
-const SvgText       = _svg.Text           || (_svg.default && _svg.default.Text);
-const LinearGradient= _svg.LinearGradient || (_svg.default && _svg.default.LinearGradient);
-const RadialGradient= _svg.RadialGradient || (_svg.default && _svg.default.RadialGradient);
-const Stop          = _svg.Stop           || (_svg.default && _svg.default.Stop);
-const Filter        = _svg.Filter         || (_svg.default && _svg.default.Filter);
-const FeGaussianBlur= _svg.FeGaussianBlur || (_svg.default && _svg.default.FeGaussianBlur);
-const FeMerge       = _svg.FeMerge        || (_svg.default && _svg.default.FeMerge);
-const FeMergeNode   = _svg.FeMergeNode    || (_svg.default && _svg.default.FeMergeNode);
-const ClipPath      = _svg.ClipPath       || (_svg.default && _svg.default.ClipPath);
-const Pattern       = _svg.Pattern        || (_svg.default && _svg.default.Pattern);
-const SvgImage      = _svg.Image          || (_svg.default && _svg.default.Image);
+const SvgLib = require('react-native-svg');
+const {
+  Svg, Defs, G, Path, Rect, Circle, Text: SvgText,
+  LinearGradient, RadialGradient, Stop, Pattern, Filter,
+  FeGaussianBlur, FeMerge, FeMergeNode, Image: SvgImage,
+  ClipPath, Use, Mask,
+} = SvgLib;
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const W = SW, H = SH * 0.155;
@@ -45,7 +33,7 @@ const TopBar = memo(({ cartCount = 3, annualPct = 100, logoUri = null, onLogoPre
 
   return (
     <View style={[styles.root, { width: W, height: H }]}>
-      <Svg width={W} height={H} viewBox={'0 0 ' + VW + ' ' + VH} preserveAspectRatio="xMidYMid meet">
+      <Svg width={W} height={H} viewBox={`0 0 ${VW} ${VH}`} preserveAspectRatio="xMidYMid meet">
         <Defs>
           {/* Honeycomb pattern */}
           <Pattern id="hc" width="18" height="10.4" patternUnits="userSpaceOnUse">
