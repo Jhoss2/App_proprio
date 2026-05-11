@@ -36,7 +36,8 @@
       "minSdkVersion": 21
     },
     "plugins": [
-      "expo-image-picker"
+      "expo-image-picker",
+      "react-native-webview"
     ],
     "jsEngine": "hermes"
   }
