@@ -7,21 +7,18 @@ import { SafeAreaProvider }       from 'react-native-safe-area-context';
 import { NavigationContainer }    from '@react-navigation/native';
 import { createStackNavigator }   from '@react-navigation/stack';
 
-// Screens ES6 (nouveaux)
 import DashboardScreen from './screens/DashboardScreen';
 
-// Screens CommonJS (anciens) — require() pour éviter l'interop Metro
-const LiveScreen    = require('./screens/LiveScreen');
-const VentesScreen  = require('./screens/VentesScreen');
-const CartsScreen   = require('./screens/CartsScreen');
-const ConfigScreen  = require('./screens/ConfigScreen');
+// Screens CJS — require avec fallback .default
+const _Live    = require('./screens/LiveScreen');
+const _Ventes  = require('./screens/VentesScreen');
+const _Carts   = require('./screens/CartsScreen');
+const _Config  = require('./screens/ConfigScreen');
 
-// Metro interop : si le module CommonJS exporte via module.exports = X,
-// require() retourne X directement. Pas besoin de .default
-const _LiveScreen   = LiveScreen.default    || LiveScreen;
-const _VentesScreen = VentesScreen.default  || VentesScreen;
-const _CartsScreen  = CartsScreen.default   || CartsScreen;
-const _ConfigScreen = ConfigScreen.default  || ConfigScreen;
+const LiveScreen    = _Live.default    || _Live;
+const VentesScreen  = _Ventes.default  || _Ventes;
+const CartsScreen   = _Carts.default   || _Carts;
+const ConfigScreen  = _Config.default  || _Config;
 
 const Stack = createStackNavigator();
 
@@ -32,9 +29,7 @@ class ErrorBoundary extends Component {
     if (this.state.error) {
       return (
         <View style={{ flex:1, backgroundColor:'#000', padding:20, paddingTop:50 }}>
-          <Text style={{ color:'#FF5722', fontFamily:'monospace', fontSize:16, marginBottom:12 }}>
-            {'💥 CRASH DÉTECTÉ'}
-          </Text>
+          <Text style={{ color:'#FF5722', fontFamily:'monospace', fontSize:16, marginBottom:12 }}>💥 CRASH DÉTECTÉ</Text>
           <Text style={{ color:'#FF7043', fontFamily:'monospace', fontSize:12, marginBottom:8 }}>
             {this.state.error.toString()}
           </Text>
@@ -75,15 +70,15 @@ const App = () => {
             <StatusBar barStyle="light-content" backgroundColor="#000000"/>
             <Stack.Navigator
               screenOptions={{
-                headerShown:  false,
-                cardStyle:    { backgroundColor:'#000000' },
+                headerShown:     false,
+                cardStyle:       { backgroundColor:'#000000' },
                 animationEnabled: true,
               }}>
-              <Stack.Screen name="Dashboard" component={DashboardScreen}/>
-              <Stack.Screen name="Live"      component={_LiveScreen}/>
-              <Stack.Screen name="Ventes"    component={_VentesScreen}/>
-              <Stack.Screen name="Carts"     component={_CartsScreen}/>
-              <Stack.Screen name="Config"    component={_ConfigScreen}/>
+              <Stack.Screen name="Dashboard"  component={DashboardScreen}/>
+              <Stack.Screen name="Live"       component={LiveScreen}/>
+              <Stack.Screen name="Ventes"     component={VentesScreen}/>
+              <Stack.Screen name="Carts"      component={CartsScreen}/>
+              <Stack.Screen name="Config"     component={ConfigScreen}/>
             </Stack.Navigator>
           </NavigationContainer>
         </ErrorBoundary>
@@ -93,3 +88,4 @@ const App = () => {
 };
 
 export default App;
+              
