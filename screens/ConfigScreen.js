@@ -303,4 +303,4 @@ const s = StyleSheet.create({
 });
 
 module.exports = ConfigScreen;
-      
+    
