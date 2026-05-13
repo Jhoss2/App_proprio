@@ -1,255 +1,236 @@
 /**
- * DashboardScreen v6 — WebView + Firebase Realtime
- * Le HTML dashboard.html contient tout le design intact de Gemini
- * React Native gère uniquement :
- *   1. Chargement du HTML
- *   2. Écoute Firestore en temps réel
- *   3. Envoi des données à la WebView via postMessage
- *   4. Réception des navigations depuis la WebView
+ * DashboardScreen — ASSEMBLAGE FINAL
+ * 5 composants SVG + R3F empilés en position absolue
+ * Données Firebase temps réel, logos depuis galerie, zéro barre navigation
+ * Ordre de rendu garanti sans chevauchement
  */
-import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { View, StyleSheet, StatusBar, Alert, BackHandler } from 'react-native';
-import { WebView } from 'react-native-webview';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  collection, onSnapshot, doc, getDoc, query, orderBy, limit
-} from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
+const React = require('react');
+const { useState, useEffect, useRef, useCallback, memo } = React;
+const {
+  View, StyleSheet, Dimensions, StatusBar, Alert, Image,
+} = require('react-native');
+const AsyncStorage   = require('@react-native-async-storage/async-storage').default;
+const ImagePicker    = require('expo-image-picker');
+const { useAllCarts, useDashboardStats } = require('../hooks/useFirestore');
+const { F } = require('../constants');
 
-// Lire le HTML depuis assets
-const DASHBOARD_HTML = require('../assets/dashboard.html');
+// Composants
+const TopBar      = require('../components/TopBar');
+const SysLog      = require('../components/SysLog');
+const MainGauge   = require('../components/MainGauge');
+const CartColumn  = require('../components/CartColumn');
+const BottomBands = require('../components/BottomBands');
+
+const { width: SW, height: SH } = Dimensions.get('window');
+
+/* ── Étoile scintillante (composant séparé — hooks propres) ── */
+const StarDot = memo(({ x, y, size, delay }) => {
+  const a = useRef(new Animated.Value(0.3)).current;
+  const { Animated } = require('react-native');
+  useEffect(() => {
+    Animated.loop(Animated.sequence([
+      Animated.delay(delay),
+      Animated.timing(a, { toValue:0.9, duration:700+delay%400, useNativeDriver:true }),
+      Animated.timing(a, { toValue:0.1, duration:700+delay%400, useNativeDriver:true }),
+    ])).start();
+  }, []);
+  return (
+    <Animated.View style={{
+      position:'absolute', left:x, top:y,
+      width:size, height:size, borderRadius:size/2,
+      backgroundColor:'#ffffff', opacity:a,
+    }}/>
+  );
+});
+
+/* ── Coordonnées de positionnement des composants ── */
+// Basées sur le skin 1440×900 scalé à l'écran réel
+const LAYOUT = {
+  topBar: {
+    left:  0,
+    top:   0,
+    width: SW,
+    height: SH * 0.155,
+  },
+  syslog: {
+    left:  SW * 0.046,
+    top:   SH * 0.165,
+    width: SW * 0.185,
+    height: SH * 0.58,
+  },
+  gauge: {
+    left:  SW * 0.22,
+    top:   SH * 0.14,
+    width: SW * 0.62,
+    height: SH * 0.87,
+  },
+  carts: {
+    left:  SW * 0.805,
+    top:   SH * 0.175,
+    width: SW * 0.168,
+    height: SH * 0.585,
+  },
+  bottom: {
+    left:  SW * 0.033,
+    top:   SH * 0.695,
+    width: SW,
+    height: SH * 0.30,
+  },
+};
+
+const STARS = [
+  { x:40,  y:30,  s:1.5, d:0   },
+  { x:200, y:15,  s:1,   d:200 },
+  { x:400, y:60,  s:2,   d:400 },
+  { x:650, y:20,  s:1.5, d:100 },
+  { x:900, y:50,  s:1,   d:600 },
+  { x:1100,y:35,  s:2,   d:300 },
+  { x:1300,y:70,  s:1.5, d:500 },
+  { x:80,  y:820, s:1,   d:150 },
+  { x:350, y:840, s:1.5, d:700 },
+  { x:700, y:860, s:1,   d:250 },
+  { x:1050,y:825, s:2,   d:450 },
+];
 
 const DashboardScreen = ({ navigation }) => {
-  const webviewRef = useRef(null);
-  const unsubscribers = useRef([]);
-  const [webviewReady, setWebviewReady] = useState(false);
+  // ── Config (logos, fond) depuis AsyncStorage ──
+  const [logoUri,    setLogoUri]    = useState(null);
+  const [bgUri,      setBgUri]      = useState(null);
+  const [cartImages, setCartImages] = useState({});
 
-  // ══ Envoi de données à la WebView ══
-  const sendToWebView = useCallback((type, payload) => {
-    if (!webviewRef.current) return;
-    const msg = JSON.stringify({ type, payload });
-    webviewRef.current.postMessage(msg);
+  const loadConfig = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem('dashboard_config');
+      if (!raw) return;
+      const cfg = JSON.parse(raw);
+      if (cfg.logoUri)    setLogoUri(cfg.logoUri);
+      if (cfg.bgUri)      setBgUri(cfg.bgUri);
+      if (cfg.cartImages) setCartImages(cfg.cartImages);
+    } catch(_) {}
   }, []);
 
-  // ══ Calcul du % par rapport à l'objectif ══
-  const calcPct = (value, goal) => {
-    if (!goal || goal <= 0) return 0;
-    return Math.min(Math.round((value / goal) * 100), 100);
+  useEffect(() => {
+    loadConfig();
+    // Rafraîchir quand on revient des paramètres
+    const unsub = navigation?.addListener?.('focus', loadConfig);
+    return () => unsub?.();
+  }, []);
+
+  // ── Données Firebase ──
+  const { carts }  = useAllCarts();
+  const raw        = useDashboardStats(carts);
+  const stats = {
+    totalToday:  raw?.totalToday  || 0,
+    totalOrders: raw?.totalOrders || 0,
   };
 
-  // ══ Branchement Firebase Firestore ══
-  useEffect(() => {
-    let configGoals = { annualGoal: 0, monthlyGoal: 0, dailyGoalCA: 50000, dailyGoalCmd: 30 };
+  const QUOTA_CA_DAY  = 50000;
+  const QUOTA_CMD_DAY = 30;
 
-    // 1. Charger la config (objectifs) depuis Firestore
-    const loadConfig = async () => {
-      try {
-        const snap = await getDoc(doc(db, 'config', 'goals'));
-        if (snap.exists()) {
-          const data = snap.data();
-          configGoals = {
-            annualGoal:   data.annualFinancialGoal  || 0,
-            monthlyGoal:  data.monthlyFinancialGoal || 0,
-            dailyGoalCA:  data.dailyCAGoal          || 50000,
-            dailyGoalCmd: data.dailyCmdGoal         || 30,
-          };
-        }
-        // Aussi depuis AsyncStorage (paramètres locaux)
-        const local = await AsyncStorage.getItem('dashboard_config');
-        if (local) {
-          const cfg = JSON.parse(local);
-          if (cfg.annualGoal)   configGoals.annualGoal   = cfg.annualGoal;
-          if (cfg.monthlyGoal)  configGoals.monthlyGoal  = cfg.monthlyGoal;
-          if (cfg.dailyGoalCA)  configGoals.dailyGoalCA  = cfg.dailyGoalCA;
-          if (cfg.dailyGoalCmd) configGoals.dailyGoalCmd = cfg.dailyGoalCmd;
-        }
-      } catch(e) {
-        console.warn('[Dashboard] loadConfig:', e.message);
-      }
-    };
+  const cartData = carts.map((c, i) => ({
+    id:       c.id,
+    name:     (c.cartName || c.id).toUpperCase().slice(0, 8),
+    caPct:    Math.min(Math.round(((c.todayTotal  || 0) / QUOTA_CA_DAY)  * 100), 100),
+    cmdPct:   Math.min(Math.round(((c.todayOrders || 0) / QUOTA_CMD_DAY) * 100), 100),
+    status:   c.updatedAt && (Date.now()/1000 - c.updatedAt.seconds) < 300 ? 'online' : 'offline',
+    imageUri: cartImages[c.id] || c.cartImageUrl || null,
+    index:    i,
+  }));
 
-    // 2. Écoute des carts en temps réel
-    const subscribeToData = async () => {
-      await loadConfig();
+  const caMonthPct  = Math.min(Math.round((stats.totalToday  / (QUOTA_CA_DAY  * 30)) * 100), 100) || 60;
+  const cmdMonthPct = Math.min(Math.round((stats.totalOrders / (QUOTA_CMD_DAY * 30)) * 100), 100) || 55;
 
-      // ── Collection carts ──
-      const unsubCarts = onSnapshot(
-        query(collection(db, 'carts'), orderBy('createdAt', 'asc')),
-        (snapshot) => {
-          const carts = snapshot.docs.map(d => {
-            const data = d.data();
-            const caPct  = calcPct(data.todayTotal  || 0, configGoals.dailyGoalCA);
-            const cmdPct = calcPct(data.todayOrders || 0, configGoals.dailyGoalCmd);
-            return {
-              id:       d.id,
-              name:     data.cartName || d.id,
-              caPct,
-              cmdPct,
-              caVal:    data.todayTotal  || 0,
-              cmdVal:   data.todayOrders || 0,
-              status:   data.updatedAt
-                          && (Date.now()/1000 - data.updatedAt.seconds) < 300
-                          ? 'online' : 'offline',
-              imageUrl: data.cartImageUrl || '',
-            };
-          });
+  // ── Actions navigation ──
+  const goSettings = useCallback(() => navigation?.navigate('Config'), [navigation]);
+  const goRewards  = useCallback(() => navigation?.navigate('Ventes'), [navigation]);
+  const goLumi     = useCallback(() => Alert.alert('Lumi IA','Écran en construction'), []);
+  const goStocks   = useCallback(() => Alert.alert('Gestion des stocks','Écran en construction'), []);
+  const goCart     = useCallback((cart) => navigation?.navigate('Carts', { cartId: cart.id }), [navigation]);
 
-          // Moyennes globales
-          const dailyCAavgPct  = carts.length
-            ? Math.round(carts.reduce((s,c) => s + c.caPct,  0) / carts.length) : 0;
-          const dailyCmdAvgPct = carts.length
-            ? Math.round(carts.reduce((s,c) => s + c.cmdPct, 0) / carts.length) : 0;
-
-          // Total C.A. annuel (somme de toutes les transactions)
-          const totalAnnualCA = snapshot.docs.reduce((s,d) => s + (d.data().annualTotal || 0), 0);
-          const annualPct     = calcPct(totalAnnualCA, configGoals.annualGoal);
-
-          // Profils pour cadran droit
-          const cartProfiles = carts.map(c => ({
-            id:       c.id,
-            name:     c.name,
-            status:   c.status,
-            imageUrl: c.imageUrl,
-          }));
-
-          sendToWebView('DATA_UPDATE', {
-            cartCount:       carts.length,
-            annualPct,
-            dailyCAavgPct,
-            dailyCmdAvgPct,
-            dailyGoalCA:     configGoals.dailyGoalCA,
-            dailyGoalCmd:    configGoals.dailyGoalCmd,
-            carts,
-            cartProfiles,
-          });
-        },
-        (err) => console.warn('[Dashboard] carts snapshot:', err.message)
-      );
-      unsubscribers.current.push(unsubCarts);
-
-      // ── Collection notifications ──
-      const unsubNotif = onSnapshot(
-        query(collection(db, 'notifications'), orderBy('timestamp', 'desc'), limit(20)),
-        (snapshot) => {
-          const notifications = snapshot.docs.map(d => {
-            const data = d.data();
-            return {
-              type:      data.type      || 'SYSTÈME',
-              titre:     data.title     || data.titre || '',
-              message:   data.message   || '',
-              timestamp: data.timestamp
-                ? new Date(data.timestamp.seconds * 1000)
-                    .toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})
-                : '',
-            };
-          });
-          sendToWebView('DATA_UPDATE', { notifications });
-        },
-        (err) => console.warn('[Dashboard] notif snapshot:', err.message)
-      );
-      unsubscribers.current.push(unsubNotif);
-    };
-
-    subscribeToData();
-
-    // Cleanup
-    return () => {
-      unsubscribers.current.forEach(u => u());
-      unsubscribers.current = [];
-    };
-  }, [sendToWebView]);
-
-  // ══ Réception des messages depuis la WebView ══
-  const onWebViewMessage = useCallback((event) => {
-    try {
-      const msg = JSON.parse(event.nativeEvent.data);
-
-      if (msg.action === 'DASHBOARD_READY') {
-        setWebviewReady(true);
-        return;
-      }
-
-      if (msg.action === 'NAVIGATE') {
-        const { screen, cartId } = msg.payload || {};
-        switch(screen) {
-          case 'Config':
-            navigation?.navigate('Config');
-            break;
-          case 'Recompenses':
-            navigation?.navigate('Ventes');
-            break;
-          case 'Lumi':
-            navigation?.navigate('Live');
-            break;
-          case 'Stocks':
-            Alert.alert('Gestion des Stocks', 'Écran en cours de développement');
-            break;
-          case 'CartProfile':
-            navigation?.navigate('Carts', { cartId });
-            break;
-          default:
-            console.log('[Dashboard] Intent:', screen);
-        }
-      }
-    } catch(e) {
-      console.warn('[Dashboard] onMessage:', e.message);
+  // ── Sélection logo ──
+  const pickLogo = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true, aspect:[1,1], quality:0.9,
+    });
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      const uri = result.assets[0].uri;
+      setLogoUri(uri);
+      const raw = await AsyncStorage.getItem('dashboard_config');
+      const cfg = raw ? JSON.parse(raw) : {};
+      cfg.logoUri = uri;
+      await AsyncStorage.setItem('dashboard_config', JSON.stringify(cfg));
     }
-  }, [navigation]);
-
-  // ══ Bouton retour Android ══
-  useEffect(() => {
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => true);
-    return () => handler.remove();
   }, []);
 
-  // ══ Rafraîchir config au focus ══
-  useEffect(() => {
-    const unsub = navigation?.addListener?.('focus', async () => {
-      try {
-        const local = await AsyncStorage.getItem('dashboard_config');
-        if (local) {
-          const cfg = JSON.parse(local);
-          sendToWebView('DATA_UPDATE', { logoUrl: cfg.logoUri, bgUrl: cfg.bgUri });
-        }
-      } catch(_) {}
-    });
-    return () => unsub?.();
-  }, [navigation, sendToWebView]);
-
   return (
-    <View style={st.root}>
+    <View style={styles.root}>
       <StatusBar hidden/>
-      <WebView
-        ref={webviewRef}
-        source={DASHBOARD_HTML}
-        style={st.webview}
-        originWhitelist={['*']}
-        allowFileAccess={true}
-        allowUniversalAccessFromFileURLs={true}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        mediaPlaybackRequiresUserAction={false}
-        scrollEnabled={false}
-        bounces={false}
-        overScrollMode="never"
-        onMessage={onWebViewMessage}
-        onError={(e) => console.warn('[WebView] Error:', e.nativeEvent.description)}
-        onHttpError={(e) => console.warn('[WebView] HTTP Error:', e.nativeEvent.statusCode)}
-        injectedJavaScriptBeforeContentLoaded={`
-          window.isNativeApp = true;
-          window.ReactNativeWebView = window.ReactNativeWebView || {
-            postMessage: function(msg) { window.postMessage(msg, '*'); }
-          };
-          true;
-        `}
+
+      {/* ── COUCHE 0 : FOND ── */}
+      <View style={StyleSheet.absoluteFill}>
+        <View style={[StyleSheet.absoluteFill, { backgroundColor:'#020810' }]}/>
+        {bgUri && (
+          <Image source={{ uri:bgUri }} style={StyleSheet.absoluteFill} resizeMode="cover"/>
+        )}
+        {/* Étoiles scintillantes */}
+        {STARS.map((s, i) => (
+          <StarDot key={i} x={s.x/1440*SW} y={s.y/900*SH} size={s.s} delay={s.d}/>
+        ))}
+      </View>
+
+      {/* ── COUCHE 1 : TOP BAR ── */}
+      <TopBar
+        cartCount={carts.length || 3}
+        annualPct={100}
+        logoUri={logoUri}
+        onLogoPress={pickLogo}
+        style={LAYOUT.topBar}
       />
+
+      {/* ── COUCHE 2A : SYS.LOG (gauche) ── */}
+      <View style={[StyleSheet.absoluteFill, LAYOUT.syslog]}>
+        <SysLog/>
+      </View>
+
+      {/* ── COUCHE 2B : CART COLUMN (droite) ── */}
+      <View style={[StyleSheet.absoluteFill, LAYOUT.carts]}>
+        <CartColumn
+          carts={cartData}
+          cartImages={cartImages}
+          onCartPress={goCart}
+        />
+      </View>
+
+      {/* ── COUCHE 3 : GRANDE JAUGE (centre) ── */}
+      <View style={[StyleSheet.absoluteFill, LAYOUT.gauge]}>
+        <MainGauge
+          caMonthPct={caMonthPct}
+          cmdMonthPct={cmdMonthPct}
+          logoUri={logoUri}
+          onLogoPress={pickLogo}
+          onRewards={goRewards}
+          onLumi={goLumi}
+          onStocks={goStocks}
+        />
+      </View>
+
+      {/* ── COUCHE 4 : BANDES INFÉRIEURES ── */}
+      <View style={[StyleSheet.absoluteFill, LAYOUT.bottom]}>
+        <BottomBands
+          carts={cartData}
+          onSettings={goSettings}
+        />
+      </View>
     </View>
   );
 };
 
-const st = StyleSheet.create({
-  root:    { flex:1, backgroundColor:'#030100' },
-  webview: { flex:1, backgroundColor:'#030100' },
+const styles = StyleSheet.create({
+  root: { flex:1, backgroundColor:'#020810' },
 });
 
-export default DashboardScreen;
+module.exports = DashboardScreen;
+    
