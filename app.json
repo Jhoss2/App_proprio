@@ -1,34 +1,48 @@
 {
   "expo": {
     "name": "Ninja's Corp",
-    "slug": "ninjas-corp",
-    "version": "1.0.0",
+    "slug": "ninja-proprio",
+    "version": "2.0.0",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#020810"
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ninjasfries.proprio"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#020810"
+        "backgroundColor": "#000000"
       },
-      "package": "com.ninjas.corp",
+      "package": "com.ninjasfries.proprio",
+      "softwareKeyboardLayoutMode": "pan",
       "permissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "READ_MEDIA_IMAGES",
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
-      ]
+        "ACCESS_NETWORK_STATE",
+        "VIBRATE",
+        "READ_MEDIA_IMAGES",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "minSdkVersion": 21
     },
     "plugins": [
-      "expo-image-picker"
-    ],
-    "assetBundlePatterns": [
-      "**/*"
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application a besoin d'accéder à vos photos pour définir le logo.",
+          "cameraPermission": "L'application a besoin d'accéder à la caméra."
+        }
+      ]
     ],
     "jsEngine": "hermes"
   }
