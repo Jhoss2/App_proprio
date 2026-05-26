@@ -14,7 +14,7 @@ workflows:
           npm install --legacy-peer-deps
       - name: Expo Prebuild
         script: |
-          npx expo prebuild --platform android --no-install
+          npx expo prebuild --platform android
       - name: Fix Gradle
         script: |
           find android -name "gradle.properties" | while read f; do
@@ -32,3 +32,4 @@ workflows:
       email:
         recipients:
           - TON_EMAIL@ICI.COM
+          
