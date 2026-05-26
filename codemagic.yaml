@@ -9,6 +9,10 @@ workflows:
       node: 18
       java: 17
     scripts:
+      - name: Clean Cache
+        script: |
+          rm -rf node_modules/.cache
+          rm -rf .expo
       - name: Install Dependencies
         script: |
           npm install --legacy-peer-deps
@@ -20,7 +24,6 @@ workflows:
           find android -name "gradle.properties" | while read f; do
             sed -i '' '/enableDexingArtifactTransform\.desugaring/d' "$f"
           done
-          cat android/gradle.properties
       - name: Build Android APK
         script: |
           cd android
@@ -28,8 +31,4 @@ workflows:
           ./gradlew assembleRelease
     artifacts:
       - android/app/build/outputs/apk/release/*.apk
-    publishing:
-      email:
-        recipients:
-          - TON_EMAIL@ICI.COM
-          
+      
