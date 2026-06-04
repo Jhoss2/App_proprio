@@ -24,9 +24,7 @@
         "ACCESS_NETWORK_STATE"
       ]
     },
-    "plugins": [
-      "expo-image-picker"
-    ],
+    "plugins": [],
     "assetBundlePatterns": [
       "**/*"
     ],
